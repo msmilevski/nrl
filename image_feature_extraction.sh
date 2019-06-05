@@ -36,6 +36,11 @@ export DATASET_DIR=${TMP}/datasets/
 source /home/${STUDENT_ID}/miniconda3/bin/activate mlp
 cd ..
 
+data_dir = "/home/s1885778/datasets/avito-duplicate-ads-detection/Images"
+target_dir = "/disk/scratch/datasets/"
+mkdir -p ${target_dir}
+rsync -ua --progress data_dir target_dir
+
 python preprocessing/image_feature_extraction.py --batch_size 64
-                                                 --dataset_name "dataset/avito-duplicate-ads-detection/Images"
+                                                 --dataset_name "/disk/scratch/datasets/avito-duplicate-ads-detection/Images"
                                                  --use_gpu "True" --gpu_id "0"
