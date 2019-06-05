@@ -25,7 +25,6 @@ export PYTHON_PATH=$PATH
 
 mkdir -p /disk/scratch/${STUDENT_ID}
 
-
 export TMPDIR=/disk/scratch/${STUDENT_ID}/
 export TMP=/disk/scratch/${STUDENT_ID}/
 
@@ -38,5 +37,5 @@ source /home/${STUDENT_ID}/miniconda3/bin/activate mlp
 cd ..
 
 python preprocessing/image_feature_extraction.py --batch_size 64
-                                                 --dataset_name "dataset/avito-duplicate-ads-detection/Images/Images_2"
+                                                 --dataset_name "dataset/avito-duplicate-ads-detection/Images"
                                                  --use_gpu "True" --gpu_id "0"
