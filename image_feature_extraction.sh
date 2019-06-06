@@ -3,7 +3,7 @@
 #SBATCH -n 1	  # tasks requested
 #SBATCH --partition=LongJob
 #SBATCH --gres=gpu:1
-#SBATCH --mem=34000  # memory in Mb
+#SBATCH --mem=12000  # memory in Mb
 #SBATCH --time=0-31:00:00
 
 
@@ -31,16 +31,9 @@ export TMP=/disk/scratch/${STUDENT_ID}/
 mkdir -p ${TMP}/datasets/
 export DATASET_DIR=${TMP}/datasets/
 # Activate the relevant virtual environment:
-
-
 source /home/${STUDENT_ID}/miniconda3/bin/activate mlp
 cd ..
 
-data_dir = "/home/s1885778/nrl/dataset/avito-duplicate-ads-detection/Images"
-target_dir = "/disk/scratch/dataset/"
-mkdir -p ${target_dir}
-rsync -ua --progress data_dir target_dir
-
-python preprocessing/image_feature_extraction.py --batch_size 64
+python preprocessing/image_feature_extraction.py --batch_size 100
                                                  --dataset_name "/disk/scratch/datasets/avito-duplicate-ads-detection/Images"
                                                  --use_gpu "True" --gpu_id "0"
