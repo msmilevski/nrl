@@ -139,7 +139,7 @@ for i_batch, sample_batched in enumerate(dataload):
         ids = ids.reshape((ids.shape[0] * ids.shape[1], 1))
 
         # Saving the data
-        save_file_path = "dataset/resnet152/image_features" + i_batch + ".hdf5"
+        save_file_path = "dataset/resnet152/image_features" + str(i_batch) + ".hdf5"
         data_file = h5py.File(save_file_path, 'w')
         data_file.create_dataset("image_id", data=ids)
         data_file.create_dataset("image_features", data=features)
