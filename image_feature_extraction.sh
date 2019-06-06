@@ -35,5 +35,5 @@ source /home/${STUDENT_ID}/miniconda3/bin/activate mlp
 cd ..
 
 python preprocessing/image_feature_extraction.py --batch_size 100
-                                                 --dataset_name "/disk/scratch/datasets/avito-duplicate-ads-detection/Images"
+                                                 --dataset_name "/home/s1885778/nrl/dataset/Images"
                                                  --use_gpu "True" --gpu_id "0"
