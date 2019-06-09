@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import string
 import re
+from tqdm import tqdm
 from pymystem3 import Mystem
 
 punctuations = [x for x in string.punctuation]
@@ -52,7 +53,7 @@ item_id = []
 descriptions = []
 image_id = []
 i = 0
-for batch in reader:
+for batch in tqdm(reader):
     item_id.append(batch['itemID'].tolist())
     image_id.append(select_random_image(batch['images_array']))
     descriptions.append(text_preprocess(batch['description']))
