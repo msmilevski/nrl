@@ -46,4 +46,3 @@ for batch in tqdm(reader):
             temp_text = temp_text + preprocess_line(desc, reg)
 
     processed_text_file.write(temp_text)
-    break
