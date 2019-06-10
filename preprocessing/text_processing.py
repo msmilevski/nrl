@@ -27,21 +27,23 @@ def preprocess_line(line, reg, mystem=None):
 
 data_path = sys.argv[1]
 processed_text_file_path = sys.argv[2]
-reader = pd.read_csv(data_path, chunksize=10, encoding='utf-8')
+reader = pd.read_csv(data_path, chunksize=100, encoding='utf-8')
 processed_text_file = codecs.open(processed_text_file_path, 'a', 'utf-8')
 reg = re.compile('[^a-z^A-Z^0-9^А-я^\s*]')
-lemmatiziation = sys.argv[3]
+lemm = bool(sys.argv[3])
 
-if lemmatiziation:
+if lemm == True:
     mystem = Mystem()
 
+print(lemm)
 for batch in tqdm(reader):
     descriptions = batch['description']
     temp_text = ""
     for i, desc in enumerate(descriptions):
-        if lemmatiziation == True:
+        if lemm == True:
             temp_text = temp_text + preprocess_line(desc, reg, mystem)
         else:
             temp_text = temp_text + preprocess_line(desc, reg)
 
     processed_text_file.write(temp_text)
+    break
