@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 def preprocess_line(line, reg, mystem=None):
     line = line.lower()
-    line = re.sub('\d+', '0 ', line)
+    line = re.sub('\d+', ' 0 ', line)
     line = re.sub('\.', '. ', line)
     line = reg.sub("", line)
     line = re.sub('\s\s+', ' ', line)
@@ -40,10 +40,10 @@ if lemm == True:
 
 print(lemm)
 for batch in tqdm(reader):
-    descriptions = batch['description']
-    ids = batch['itemID']
+    b_descriptions = batch['description']
+    ids = batch['itemID'].tolist()
     temp_text = ""
-    for i, desc in enumerate(descriptions):
+    for i, desc in enumerate(b_descriptions):
         if lemm == True:
             descriptions.append(preprocess_line(desc, reg, mystem))
         else:
