@@ -4,15 +4,16 @@ import sys
 import pandas as pd
 from transliterate import translit
 from tqdm import tqdm
-import codecs
 
 
 def preprocess_line(line, reg, mystem=None):
     line = line.lower()
-    line = re.sub('\n', ' ', line)
-    line = re.sub('\s\s+', ' ', line)
+    line = re.sub('\d+', '0 ', line)
+    line = re.sub('\.', '. ', line)
     line = reg.sub("", line)
-    line = re.sub('\d+', '0', line)
+    line = re.sub('\s\s+', ' ', line)
+    line = re.sub("\n", '', line)
+
     line = line.strip()
     line = translit(line, 'ru')
 
@@ -20,7 +21,7 @@ def preprocess_line(line, reg, mystem=None):
         line = mystem.lemmatize(line)
         line = "".join(line)
 
-    line = line + '\n'
+    #line = line + '\n'
 
     return line
 
@@ -28,9 +29,11 @@ def preprocess_line(line, reg, mystem=None):
 data_path = sys.argv[1]
 processed_text_file_path = sys.argv[2]
 reader = pd.read_csv(data_path, chunksize=100, encoding='utf-8')
-processed_text_file = codecs.open(processed_text_file_path, 'a', 'utf-8')
 reg = re.compile('[^a-z^A-Z^0-9^А-я^\s*]')
-lemm = bool(sys.argv[3])
+lemm = (sys.argv[3] == 'True')
+
+item_id = []
+descriptions = []
 
 if lemm == True:
     mystem = Mystem()
@@ -38,12 +41,17 @@ if lemm == True:
 print(lemm)
 for batch in tqdm(reader):
     descriptions = batch['description']
+    ids = batch['itemID']
     temp_text = ""
     for i, desc in enumerate(descriptions):
         if lemm == True:
-            temp_text = temp_text + preprocess_line(desc, reg, mystem)
+            descriptions.append(preprocess_line(desc, reg, mystem))
         else:
-            temp_text = temp_text + preprocess_line(desc, reg)
+            descriptions.append(preprocess_line(desc, reg))
+        item_id.append(ids[i])
 
-    processed_text_file.write(temp_text)
-    break
+
+d = {}
+d['itemID'] = item_id
+d['descriptions'] = descriptions
+pd.DataFrame(data=d).to_csv(processed_text_file_path)
