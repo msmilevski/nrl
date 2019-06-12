@@ -15,7 +15,7 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-from arg_util import arg_extractor
+import arg_extractor
 
 class ImageDataset(Dataset):
     '''Images dataset'''
@@ -101,6 +101,8 @@ class RandomCrop(object):
 
 
 args, device = arg_extractor.get_args()
+print(args)
+
 root_dir = args.dataset_name
 print(root_dir)
 

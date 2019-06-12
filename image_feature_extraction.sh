@@ -1,7 +1,7 @@
 #!/bin/sh
 #SBATCH -N 1	  # nodes requested
 #SBATCH -n 1	  # tasks requested
-#SBATCH --partition=LongJob
+#SBATCH --partition=LongJobs
 #SBATCH --gres=gpu:1
 #SBATCH --mem=12000  # memory in Mb
 #SBATCH --time=0-31:00:00
@@ -32,8 +32,6 @@ mkdir -p ${TMP}/datasets/
 export DATASET_DIR=${TMP}/datasets/
 # Activate the relevant virtual environment:
 source /home/${STUDENT_ID}/miniconda3/bin/activate mlp
-cd ..
 
-python preprocessing/image_feature_extraction.py --batch_size 100
-                                                 --dataset_name "/home/s1885778/nrl/dataset/Images"
-                                                 --use_gpu "True" --gpu_id "0"
+
+python image_feature_extraction.py --batch_size 100 --dataset_name '/home/s1885778/nrl/dataset/Images_' --use_gpu 'True' --gpu_id '0'
