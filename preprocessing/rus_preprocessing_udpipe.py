@@ -11,6 +11,8 @@ import os
 import wget
 import re
 from ufal.udpipe import Model, Pipeline
+import pandas as pd
+from tqdm import tqdm
 
 '''
 Этот скрипт принимает на вход необработанный русский текст 
@@ -221,8 +223,25 @@ print('\nLoading the model...', file=sys.stderr)
 model = Model.load(udpipe_filename)
 process_pipeline = Pipeline(model, 'tokenize', Pipeline.DEFAULT, Pipeline.DEFAULT, 'conllu')
 
+print("Reading input...")
+data_path = str(sys.argv[1])
+processed_data_path = str(sys.argv[2])
+reader = pd.read_csv(data_path, chunksize=100, encoding='utf-8')
+item_id = []
+descriptions = []
 print('Processing input...', file=sys.stderr)
-for line in sys.stdin:
-    res = unify_sym(line.strip())
-    output = process(process_pipeline, text=res)
-    print(' '.join(output))
+
+for batch in tqdm(reader):
+    b_descriptions = batch['description']
+    ids = batch['itemID'].tolist()
+    temp_text = ""
+    for i, desc in enumerate(b_descriptions):
+        res = unify_sym(desc.strip())
+        output = process(process_pipeline, text=res)
+        descriptions.append(' '.join(output))
+        item_id.append(ids[i])
+
+d = {}
+d['itemID'] = item_id
+d['descriptions'] = descriptions
+pd.DataFrame(data=d).to_csv(processed_data_path)
