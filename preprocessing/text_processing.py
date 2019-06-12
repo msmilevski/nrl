@@ -5,6 +5,7 @@ import pandas as pd
 from transliterate import translit
 from tqdm import tqdm
 import json
+import operator
 
 
 def preprocess_line(line, reg, mystem=None):
@@ -25,52 +26,56 @@ def preprocess_line(line, reg, mystem=None):
     return line
 
 
-# def preprocess_corpus(data_path, processed_text_file_path, l):
-#     reader = pd.read_csv(data_path, chunksize=100, encoding='utf-8')
-#     reg = re.compile('[^a-z^A-Z^0-9^А-я^\s*]')
-#     lemm = (l == 'True')
-#
-#     item_id = []
-#     descriptions = []
-#
-#     if lemm == True:
-#         mystem = Mystem()
-#
-#     print(lemm)
-#     for batch in tqdm(reader):
-#         b_descriptions = batch['description']
-#         ids = batch['itemID'].tolist()
-#         temp_text = ""
-#         for i, desc in enumerate(b_descriptions):
-#             if lemm == True:
-#                 descriptions.append(preprocess_line(desc, reg, mystem))
-#             else:
-#                 descriptions.append(preprocess_line(desc, reg))
-#             item_id.append(ids[i])
-#
-#     d = {}
-#     d['itemID'] = item_id
-#     d['descriptions'] = descriptions
-#     pd.DataFrame(data=d).to_csv(processed_text_file_path)
+def preprocess_corpus(data_path, processed_text_file_path, l):
+    reader = pd.read_csv(data_path, chunksize=100, encoding='utf-8')
+    reg = re.compile('[^a-z^A-Z^0-9^А-я^\s*]')
+    lemm = (l == 'True')
 
-# def create_word_frequency_document(self, path_to_json_file='../dataset/word_frequencies.json'):
-#
-#     data = json.load(open(self.path_to_file))
-#     annotations = data['annotations']
-#
-#     frequency = {}
-#     for annotation in annotations:
-#         sentence = annotation[0]['text'].split()
-#         for word in sentence:
-#             # proverka za brishenje na greski so zborovi vo unicode format(latinski zborovi)
-#             if any(x.isupper() for x in unidecode(word)) == False:
-#                 count = frequency.get(word, 0)
-#                 frequency[word] = count + 1
-#
-#     sorted_frequency = sorted(frequency.items(), key=operator.itemgetter(1), reverse=True)
-#
-#     with open(path_to_json_file, 'w') as fp:
-#         json.dump(sorted_frequency, fp)
+    item_id = []
+    descriptions = []
+
+    if lemm == True:
+        mystem = Mystem()
+
+    print(lemm)
+    for batch in tqdm(reader):
+        b_descriptions = batch['description']
+        ids = batch['itemID'].tolist()
+        temp_text = ""
+        for i, desc in enumerate(b_descriptions):
+            if lemm == True:
+                descriptions.append(preprocess_line(desc, reg, mystem))
+            else:
+                descriptions.append(preprocess_line(desc, reg))
+            item_id.append(ids[i])
+
+    d = {}
+    d['itemID'] = item_id
+    d['descriptions'] = descriptions
+    pd.DataFrame(data=d).to_csv(processed_text_file_path)
+
+
+def create_word_frequency_document(path_to_file, path_to_json_file='../dataset/word_frequencies.json'):
+    reader = pd.read_csv(path_to_file, chunksize=1, encoding='utf-8')
+
+    frequency = {}
+
+    for i, batch in enumerate(reader):
+        descriptions = batch['descriptions']
+        descriptions = "".join(descriptions)
+
+        for word in descriptions:
+            keys = list(frequency.keys())
+
+            if word in keys:
+                frequency[word] = frequency[word] + 1
+            else:
+                frequency[word] = 1
+
+    sorted_frequency = sorted(frequency.items(), key=operator.itemgetter(1), reverse=True)
+
+    with open(path_to_json_file, 'w') as fp:
+        json.dump(sorted_frequency, fp)
 
 # def get_n_most_frequent_words(self, word_frequency_file='../dataset/word_frequencies.json', vocabulary_size=10000):
 #
@@ -133,4 +138,5 @@ def preprocess_line(line, reg, mystem=None):
 #         print(result_sentence)
 #         return result_sentence
 
-#preprocess_corpus(sys.argv[1], sys.argv[2], sys.argv[3])
+# preprocess_corpus(sys.argv[1], sys.argv[2], sys.argv[3])
+create_word_frequency_document(sys.argv[1], sys.argv[2])
