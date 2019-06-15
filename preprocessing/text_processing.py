@@ -59,17 +59,15 @@ def create_word_frequency_document(path_to_file, path_to_json_file='../dataset/w
     reader = pd.read_csv(path_to_file, chunksize=100, encoding='utf-8')
 
     frequency = {}
-    keys = []
-    for i, batch in tqdm(reader):
+    for batch in tqdm(reader):
         descriptions = batch['descriptions']
-        descriptions = "".join(descriptions)
-        descriptions = descriptions.split()
-        for word in descriptions:
-            if word in keys:
-                frequency[word] = frequency[word] + 1
-            else:
-                frequency[word] = 1
-                keys.append(word)
+
+        for desc in descriptions:
+            for word in desc.split():
+                if word in frequency:
+                    frequency[word] = frequency[word] + 1
+                else:
+                    frequency[word] = 1
 
     sorted_frequency = sorted(frequency.items(), key=operator.itemgetter(1), reverse=True)
 
