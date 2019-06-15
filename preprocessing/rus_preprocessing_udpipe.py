@@ -232,13 +232,14 @@ descriptions = []
 print('Processing input...', file=sys.stderr)
 
 for batch in tqdm(reader):
-    b_descriptions = batch['description']
+    b_descriptions = batch['descriptions']
     ids = batch['itemID'].tolist()
     temp_text = ""
     for i, desc in enumerate(b_descriptions):
         res = unify_sym(desc.strip())
         output = process(process_pipeline, text=res)
-        descriptions.append(' '.join(output))
+        output = ' '.join(output)
+        descriptions.append(output)
         item_id.append(ids[i])
 
 d = {}
