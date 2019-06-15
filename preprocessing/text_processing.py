@@ -56,26 +56,26 @@ def preprocess_corpus(data_path, processed_text_file_path, l):
 
 
 def create_word_frequency_document(path_to_file, path_to_json_file='../dataset/word_frequencies.json'):
-    reader = pd.read_csv(path_to_file, chunksize=1, encoding='utf-8')
+    reader = pd.read_csv(path_to_file, chunksize=100, encoding='utf-8')
 
     frequency = {}
-
-    for i, batch in enumerate(reader):
+    keys = []
+    for i, batch in tqdm(reader):
         descriptions = batch['descriptions']
         descriptions = "".join(descriptions)
-
+        descriptions = descriptions.split()
         for word in descriptions:
-            keys = list(frequency.keys())
-
             if word in keys:
                 frequency[word] = frequency[word] + 1
             else:
                 frequency[word] = 1
+                keys.append(word)
 
     sorted_frequency = sorted(frequency.items(), key=operator.itemgetter(1), reverse=True)
 
     with open(path_to_json_file, 'w') as fp:
         json.dump(sorted_frequency, fp)
+
 
 # def get_n_most_frequent_words(self, word_frequency_file='../dataset/word_frequencies.json', vocabulary_size=10000):
 #
