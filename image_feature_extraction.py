@@ -129,6 +129,7 @@ for i_batch, sample_batched in enumerate(dataload):
     input = sample_batched['image'].to(device)
     batch_features = resnet152.forward()
     # Reshape output from the last layer of the resnet
+    batch_features = batch_features.cpu()
     batch_features = batch_features.squeeze()
     # Use detach to imply that I don't need gradients
     # Turn tensor into numpy array
