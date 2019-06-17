@@ -38,7 +38,7 @@ class ImageDataset(Dataset):
 
     def __getitem__(self, idx):
         img_path = self.image_paths[idx]
-        img_id = int(img_path.split("\\")[-1].split(".")[0])
+        img_id = int(img_path.split("/")[-1].split(".")[0])
         image = cv2.imread(img_path)[:, :, :3]
 
         if self.transform:
@@ -111,6 +111,7 @@ composed = transforms.Compose([Rescale(256),
                                transforms.ToTensor(),
                                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 image_dataset = ImageDataset(root_dir=root_dir, transform=composed)
+print(len(image_dataset))
 dataload = DataLoader(image_dataset, batch_size=args.batch_size, num_workers=0)
 
 resnet152 = models.resnet152(pretrained=True)
