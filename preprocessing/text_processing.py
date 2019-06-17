@@ -75,15 +75,15 @@ def create_word_frequency_document(path_to_file, path_to_json_file='../dataset/w
         json.dump(sorted_frequency, fp)
 
 
-def get_n_most_frequent_words(self, word_frequency_file='../dataset/word_frequencies.json', vocabulary_size=10000):
+def get_n_most_frequent_words(word_frequency_file='../dataset/word_frequencies.json', vocabulary_size=10000):
 
         data = json.load(open(word_frequency_file))
         return data[0:vocabulary_size]
 
-def generate_vocabulary(self, vocabulary_file='../dataset/vist2017_vocabulary.json',
+def generate_vocabulary(vocabulary_file='../dataset/vist2017_vocabulary.json',
                             word_frequency_file='../dataset/word_frequencies.json', vocabulary_size=10000):
 
-        data = self.get_n_most_frequent_words(word_frequency_file, vocabulary_size)
+        data = get_n_most_frequent_words(word_frequency_file, vocabulary_size)
 
         idx_to_words = []
         idx_to_words.append("<NULL>")
@@ -137,4 +137,5 @@ def generate_vocabulary(self, vocabulary_file='../dataset/vist2017_vocabulary.js
 #         return result_sentence
 
 # preprocess_corpus(sys.argv[1], sys.argv[2], sys.argv[3])
-create_word_frequency_document(sys.argv[1], sys.argv[2])
+# create_word_frequency_document(sys.argv[1], sys.argv[2])
+generate_vocabulary(sys.argv[1], sys.argv[2], int(sys.argv[3]))
