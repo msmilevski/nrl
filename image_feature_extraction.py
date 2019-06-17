@@ -127,7 +127,7 @@ ids = []
 for i_batch, sample_batched in enumerate(dataload):
     # Get image features
     input = sample_batched['image'].to(device)
-    batch_features = resnet152.forward()
+    batch_features = resnet152.forward(input)
     # Reshape output from the last layer of the resnet
     batch_features = batch_features.cpu()
     batch_features = batch_features.squeeze()
