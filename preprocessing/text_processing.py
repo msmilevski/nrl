@@ -75,36 +75,36 @@ def create_word_frequency_document(path_to_file, path_to_json_file='../dataset/w
         json.dump(sorted_frequency, fp)
 
 
-# def get_n_most_frequent_words(self, word_frequency_file='../dataset/word_frequencies.json', vocabulary_size=10000):
-#
-#         data = json.load(open(word_frequency_file))
-#         return data[0:vocabulary_size]
-#
-# def generate_vocabulary(self, vocabulary_file='../dataset/vist2017_vocabulary.json',
-#                             word_frequency_file='../dataset/word_frequencies.json', vocabulary_size=10000):
-#
-#         data = self.get_n_most_frequent_words(word_frequency_file, vocabulary_size)
-#
-#         idx_to_words = []
-#         idx_to_words.append("<NULL>")
-#         idx_to_words.append("<START>")
-#         idx_to_words.append("<END>")
-#         idx_to_words.append("<UNK>")
-#
-#         for element in data:
-#             idx_to_words.append(element[0])
-#
-#         words_to_idx = {}
-#         for i in range(len(idx_to_words)):
-#             words_to_idx[idx_to_words[i]] = i
-#
-#         vocabulary = {}
-#         vocabulary["idx_to_words"] = idx_to_words
-#         vocabulary["words_to_idx"] = words_to_idx
-#
-#         with open(vocabulary_file, 'w') as fp:
-#             json.dump(vocabulary, fp)
-#
+def get_n_most_frequent_words(self, word_frequency_file='../dataset/word_frequencies.json', vocabulary_size=10000):
+
+        data = json.load(open(word_frequency_file))
+        return data[0:vocabulary_size]
+
+def generate_vocabulary(self, vocabulary_file='../dataset/vist2017_vocabulary.json',
+                            word_frequency_file='../dataset/word_frequencies.json', vocabulary_size=10000):
+
+        data = self.get_n_most_frequent_words(word_frequency_file, vocabulary_size)
+
+        idx_to_words = []
+        idx_to_words.append("<NULL>")
+        idx_to_words.append("<START>")
+        idx_to_words.append("<END>")
+        idx_to_words.append("<UNK>")
+
+        for element in data:
+            idx_to_words.append(element[0])
+
+        words_to_idx = {}
+        for i in range(len(idx_to_words)):
+            words_to_idx[idx_to_words[i]] = i
+
+        vocabulary = {}
+        vocabulary["idx_to_words"] = idx_to_words
+        vocabulary["words_to_idx"] = words_to_idx
+
+        with open(vocabulary_file, 'w') as fp:
+            json.dump(vocabulary, fp)
+
 # def sentences_to_index_helper(self, sentence, word_to_idx, max_length):
 #         words = sentence.split()
 #         result_sentence = []
