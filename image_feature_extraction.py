@@ -135,32 +135,34 @@ for i_batch, sample_batched in enumerate(dataload):
     features.append(batch_features.detach().numpy().astype(float))
     ids.append(sample_batched['image_id'].detach().numpy().astype(int))
 
-    if i_batch!=0 and i_batch % 100 == 0:
-        # Reshaping the arrays
-        features = np.array(features)
-        ids = np.array(ids)
-        features = features.reshape((features.shape[0] * features.shape[1], features.shape[2]))
-        ids = ids.reshape((ids.shape[0] * ids.shape[1], 1))
+    # if i_batch!=0 and i_batch % 100 == 0:
+    #     # Reshaping the arrays
+    #     features = np.array(features)
+    #     ids = np.array(ids)
+    #     features = features.reshape((features.shape[0] * features.shape[1], features.shape[2]))
+    #     ids = ids.reshape((ids.shape[0] * ids.shape[1], 1))
+    #
+    #     # Saving the data
+    #     save_file_path = "dataset/resnet152/image_features" + str(i_batch) + ".hdf5"
+    #     data_file = h5py.File(save_file_path, 'w')
+    #     data_file.create_dataset("image_id", data=ids)
+    #     data_file.create_dataset("image_features", data=features)
+    #
+    #     features = []
+    #     ids = []
 
-        # Saving the data
-        save_file_path = "dataset/resnet152/image_features" + str(i_batch) + ".hdf5"
-        data_file = h5py.File(save_file_path, 'w')
-        data_file.create_dataset("image_id", data=ids)
-        data_file.create_dataset("image_features", data=features)
 
-        features = []
-        ids = []
-
-
-if len(features) != 0:
+# if len(features) != 0:
     # Reshaping the arrays
-    features = np.array(features)
-    ids = np.array(ids)
-    features = features.reshape((features.shape[0] * features.shape[1], features.shape[2]))
-    ids = ids.reshape((ids.shape[0] * ids.shape[1], 1))
+features = np.array(features)
+ids = np.array(ids)
+features = features.reshape((features.shape[0] * features.shape[1], features.shape[2]))
+ids = ids.reshape((ids.shape[0] * ids.shape[1], 1))
 
-    # Saving the data
-    save_file_path = "dataset/resnet152/image_features_last.hdf5"
-    data_file = h5py.File(save_file_path, 'w')
-    data_file.create_dataset("image_id", data=ids)
-    data_file.create_dataset("image_features", data=features)
+# Saving the data
+
+save_file_path = "dataset/resnet152/image_features_" + root_dir.split('/')[-1] + ".hdf5"
+print("Saving file: " + save_file_path + " ...")
+data_file = h5py.File(save_file_path, 'w')
+data_file.create_dataset("image_id", data=ids)
+data_file.create_dataset("image_features", data=features)
