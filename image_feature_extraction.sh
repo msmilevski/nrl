@@ -33,5 +33,9 @@ export DATASET_DIR=${TMP}/datasets/
 # Activate the relevant virtual environment:
 source /home/${STUDENT_ID}/miniconda3/bin/activate mlp
 
+data_dir = "/home/s1885778/nrl/datasets/target_dataset"
+target_dir = "/disk/scratch/datasets/"
+mkdir -p ${target_dir}
+rsync -ua --progress data_dir target_dir
 
-python image_feature_extraction.py --batch_size 100 --dataset_name '/home/s1885778/nrl/dataset/Images_' --use_gpu 'True' --gpu_id '0'
+python image_feature_extraction.py --batch_size 100 --dataset_name '/disk/scratch/datasets/' --use_gpu 'True' --gpu_id '0'
