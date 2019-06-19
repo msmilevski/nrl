@@ -8,6 +8,7 @@ import json
 import operator
 import h5py
 
+
 def preprocess_line(line, reg, mystem=None):
     line = line.lower()
     line = re.sub('\d+', ' 0 ', line)
@@ -26,33 +27,37 @@ def preprocess_line(line, reg, mystem=None):
     return line
 
 
-def preprocess_corpus(data_path, processed_text_file_path, l):
-    reader = pd.read_csv(data_path, chunksize=100, encoding='utf-8')
+def preprocess_corpus(id_data, text_data, lemmatization):
     reg = re.compile('[^a-z^A-Z^0-9^А-я^\s*]')
-    lemm = (l == 'True')
+    lemm = (lemmatization == 'True')
 
-    item_id = []
     descriptions = []
 
     if lemm == True:
         mystem = Mystem()
 
     print(lemm)
-    for batch in tqdm(reader):
-        b_descriptions = batch['description']
-        ids = batch['itemID'].tolist()
-        temp_text = ""
-        for i, desc in enumerate(b_descriptions):
-            if lemm == True:
-                descriptions.append(preprocess_line(desc, reg, mystem))
-            else:
-                descriptions.append(preprocess_line(desc, reg))
-            item_id.append(ids[i])
+    for i, descrption in enumerate(text_data):
+        if lemm == True:
+            descriptions.append(preprocess_line(descrption, reg, mystem))
+        else:
+            descriptions.append(preprocess_line(descrption, reg))
 
     d = {}
-    d['itemID'] = item_id
+    d['itemID'] = id_data
     d['descriptions'] = descriptions
-    pd.DataFrame(data=d).to_csv(processed_text_file_path)
+
+    df = pd.DataFrame(data=d)
+    rows_with_nan_desc = df.index[df['descriptions'].isna() == True].tolist()
+    print("Number of description that are empty after preprocessing: " + str(len(rows_with_nan_desc)))
+    print("Deleting rows ...")
+    df.drop(index=rows_with_nan_desc, inplace=True)
+
+    return df, rows_with_nan_desc
+
+class ProcessArray:
+    def __init__(self):
+        return
 
 
 def create_word_frequency_document(path_to_file, path_to_json_file='../dataset/word_frequencies.json'):
@@ -146,7 +151,6 @@ def sentences_to_indecies(dataset_file_path, processed_text_file_path, vocab_fil
     data_file.create_dataset("itemID", data=item_id)
     data_file.create_dataset("descriptions", data=descriptions)
 
-
 # def indecies_to_sentence(self, sentence, idx_to_word):
 #
 #         result_sentence = ""
@@ -160,4 +164,4 @@ def sentences_to_indecies(dataset_file_path, processed_text_file_path, vocab_fil
 # preprocess_corpus(sys.argv[1], sys.argv[2], sys.argv[3])
 # create_word_frequency_document(sys.argv[1], sys.argv[2])
 # generate_vocabulary(sys.argv[1], sys.argv[2], int(sys.argv[3]))
-sentences_to_indecies(sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]))
+# sentences_to_indecies(sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]))
