@@ -208,41 +208,40 @@ def process(pipeline, text='Строка', keep_pos=True, keep_punct=False):
         tagged_propn = [word.split('_')[0] for word in tagged_propn]
     return tagged_propn
 
+def main(id_data, text_data):
+    standard_library.install_aliases()
 
-standard_library.install_aliases()
+    # URL of the UDPipe model
+    udpipe_model_url = 'https://rusvectores.org/static/models/udpipe_syntagrus.model'
+    udpipe_filename = udpipe_model_url.split('/')[-1]
 
-# URL of the UDPipe model
-udpipe_model_url = 'https://rusvectores.org/static/models/udpipe_syntagrus.model'
-udpipe_filename = udpipe_model_url.split('/')[-1]
+    if not os.path.isfile(udpipe_filename):
+        print('UDPipe model not found. Downloading...', file=sys.stderr)
+        wget.download(udpipe_model_url)
 
-if not os.path.isfile(udpipe_filename):
-    print('UDPipe model not found. Downloading...', file=sys.stderr)
-    wget.download(udpipe_model_url)
+    print('\nLoading the model...', file=sys.stderr)
+    model = Model.load(udpipe_filename)
+    process_pipeline = Pipeline(model, 'tokenize', Pipeline.DEFAULT, Pipeline.DEFAULT, 'conllu')
 
-print('\nLoading the model...', file=sys.stderr)
-model = Model.load(udpipe_filename)
-process_pipeline = Pipeline(model, 'tokenize', Pipeline.DEFAULT, Pipeline.DEFAULT, 'conllu')
+    print("Reading input...")
 
-print("Reading input...")
-data_path = str(sys.argv[1])
-processed_data_path = str(sys.argv[2])
-reader = pd.read_csv(data_path, chunksize=100, encoding='utf-8')
-item_id = []
-descriptions = []
-print('Processing input...', file=sys.stderr)
+    descriptions = []
+    print('Processing input...', file=sys.stderr)
 
-for batch in tqdm(reader):
-    b_descriptions = batch['descriptions']
-    ids = batch['itemID'].tolist()
-    temp_text = ""
-    for i, desc in enumerate(b_descriptions):
+    for  desc in tqdm(text_data):
         res = unify_sym(desc.strip())
         output = process(process_pipeline, text=res)
         output = ' '.join(output)
         descriptions.append(output)
-        item_id.append(ids[i])
 
-d = {}
-d['itemID'] = item_id
-d['descriptions'] = descriptions
-pd.DataFrame(data=d).to_csv(processed_data_path)
+    d = {}
+    d['itemID'] = id_data.tolist()
+    d['descriptions'] = descriptions
+    d = pd.DataFrame(data=d)
+
+    rows_with_nan_desc = d.index[d['descriptions'].isna() == True].tolist()
+    print("Number of description that are empty after preprocessing: " + str(len(rows_with_nan_desc)))
+    print("Deleting rows ...")
+    d.drop(index=rows_with_nan_desc, inplace=True)
+
+    return d, rows_with_nan_desc
