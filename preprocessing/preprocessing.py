@@ -11,7 +11,7 @@ if sys.argv[1] == 'fastText':
     descriptions, rows_with_nan_desc = preprocess.preprocess_corpus(ids, descriptions, lemmatization=True)
 
 if sys.argv[1] == 'rusVec':
-    descriptions, rows_with_nan_desc = rus_preprocessing_udpipe.main(ids, desciptions)
+    descriptions, rows_with_nan_desc = rus_preprocessing_udpipe.main(ids, descriptions)
 
 random_image = preprocess.select_random_image(ids.tolist(), image_arrays, seed=seed)
 
