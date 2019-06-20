@@ -58,16 +58,15 @@ def preprocess_corpus(id_data, text_data, lemmatization):
     print("Preprocessing the text corpus ...")
 
     reg = re.compile('[^a-z^A-Z^0-9^А-я^\s*]')
-    lemm = (lemmatization == 'True')
 
     descriptions = []
 
-    if lemm == True:
+    if lemmatization == True:
         mystem = Mystem()
 
-    print(lemm)
+    print("Lemmatization: " + str(lemmatization))
     for i, descrption in tqdm(enumerate(text_data)):
-        if lemm == True:
+        if lemmatization == True:
             descriptions.append(preprocess_line(descrption, reg, mystem))
         else:
             descriptions.append(preprocess_line(descrption, reg))
