@@ -126,36 +126,22 @@ ids = []
 
 for i_batch, sample_batched in enumerate(dataload):
     # Get image features
+    print("Put images on device: " + str(device))
     input = sample_batched['image'].to(device)
+    print("Put them through the pretrained network...")
     batch_features = resnet152.forward(input)
     # Reshape output from the last layer of the resnet
+    print("Return data on CPU")
     batch_features = batch_features.cpu()
     batch_features = batch_features.squeeze()
     # Use detach to imply that I don't need gradients
     # Turn tensor into numpy array
     # Save each image feature with its corresponing img_id
+    print("Add batch to list...")
     features.append(batch_features.detach().numpy().astype(float))
     ids.append(sample_batched['image_id'].detach().numpy().astype(int))
 
-    # if i_batch!=0 and i_batch % 100 == 0:
-    #     # Reshaping the arrays
-    #     features = np.array(features)
-    #     ids = np.array(ids)
-    #     features = features.reshape((features.shape[0] * features.shape[1], features.shape[2]))
-    #     ids = ids.reshape((ids.shape[0] * ids.shape[1], 1))
-    #
-    #     # Saving the data
-    #     save_file_path = "dataset/resnet152/image_features" + str(i_batch) + ".hdf5"
-    #     data_file = h5py.File(save_file_path, 'w')
-    #     data_file.create_dataset("image_id", data=ids)
-    #     data_file.create_dataset("image_features", data=features)
-    #
-    #     features = []
-    #     ids = []
 
-
-# if len(features) != 0:
-    # Reshaping the arrays
 features = np.array(features)
 ids = np.array(ids)
 features = features.reshape((features.shape[0] * features.shape[1], features.shape[2]))
@@ -163,7 +149,7 @@ ids = ids.reshape((ids.shape[0] * ids.shape[1], 1))
 
 # Saving the data
 
-save_file_path = "home/s1885778/nrl/dataset/resnet152/image_features_" + root_dir.split('/')[-1] + ".hdf5"
+save_file_path = "home/s1885778/nrl/dataset/resnet152/image_features_" + root_dir.split('/')[-2] + ".hdf5"
 print("Saving file: " + save_file_path + " ...")
 data_file = h5py.File(save_file_path, 'w')
 data_file.create_dataset("image_id", data=ids)
