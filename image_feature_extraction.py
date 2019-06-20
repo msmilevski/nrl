@@ -149,7 +149,7 @@ ids = ids.reshape((ids.shape[0] * ids.shape[1], 1))
 
 # Saving the data
 
-save_file_path = "home/s1885778/nrl/dataset/resnet152/image_features_" + root_dir.split('/')[-2] + ".hdf5"
+save_file_path = "/home/s1885778/nrl/dataset/resnet152/image_features_" + root_dir.split('/')[-2] + ".hdf5"
 print("Saving file: " + save_file_path + " ...")
 data_file = h5py.File(save_file_path, 'w')
 data_file.create_dataset("image_id", data=ids)
