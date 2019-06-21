@@ -7,8 +7,6 @@ import torchvision.models as models
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
 import h5py
-import sys
-import time
 
 # Ignore warinings
 import warnings
@@ -16,6 +14,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 import arg_extractor
+
 
 class ImageDataset(Dataset):
     '''Images dataset'''
@@ -138,17 +137,12 @@ for i_batch, sample_batched in enumerate(dataload):
     # Turn tensor into numpy array
     # Save each image feature with its corresponing img_id
     print("Add batch to list...")
-    features.append(batch_features.detach().numpy().astype(float))
-    ids.append(sample_batched['image_id'].detach().numpy().astype(int))
-
-
-features = np.array(features)
-ids = np.array(ids)
-features = features.reshape((features.shape[0] * features.shape[1], features.shape[2]))
-ids = ids.reshape((ids.shape[0] * ids.shape[1], 1))
+    batch_features = batch_features.detach().numpy().astype(float)
+    for i, id in enumerate(sample_batched['image_id']):
+        ids.append(int(id))
+        features.append(batch_features[i, :])
 
 # Saving the data
-
 save_file_path = "/home/s1885778/nrl/dataset/resnet152/image_features_" + root_dir.split('/')[-2] + ".hdf5"
 print("Saving file: " + save_file_path + " ...")
 data_file = h5py.File(save_file_path, 'w')
