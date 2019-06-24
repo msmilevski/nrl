@@ -12,6 +12,7 @@ target_file_path = sys.argv[2]
 source_data = h5py.File(source_file_path, 'r')
 target_data = h5py.File(target_file_path, 'w')
 target_data.create_dataset("itemID", data=source_data['itemID'][:].tolist())
+target_data.create_dataset('image_id', data=source_data['image_id'][:].tolist())
 
 source_descriptions = source_data['descriptions'][:].tolist()
 target_descriptions = []
