@@ -37,7 +37,7 @@ class ImageDataset(Dataset):
 
     def __getitem__(self, idx):
         img_path = self.image_paths[idx]
-        img_id = int(img_path.split("/")[-1].split(".")[0])
+        img_id = int(img_path.split("\\")[-1].split(".")[0])
         image = cv2.imread(img_path)[:, :, :3]
 
         if self.transform:
@@ -132,7 +132,8 @@ for i_batch, sample_batched in enumerate(dataload):
     # Reshape output from the last layer of the resnet
     print("Return data on CPU")
     batch_features = batch_features.cpu()
-    batch_features = batch_features.squeeze()
+    print(batch_features.shape)
+    batch_features = batch_features.reshape(batch_features.shape[0], batch_features.shape[1])
     # Use detach to imply that I don't need gradients
     # Turn tensor into numpy array
     # Save each image feature with its corresponing img_id
