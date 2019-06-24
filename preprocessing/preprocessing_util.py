@@ -1,6 +1,5 @@
 import re
 from pymystem3 import Mystem
-import sys
 import pandas as pd
 from transliterate import translit
 from tqdm import tqdm
@@ -14,9 +13,9 @@ def initial_preprocess(info_path):
     print("Start of the preprocessing process for the items in: " + info_path)
     print("Reading file ...")
     reader = pd.read_csv(info_path, encoding='utf-8')
-    # print("Dropping columns: categoryID, title, attrsJSON, price , locationID, metroID, lat, lon")
-    # reader.drop(['categoryID', 'title', 'attrsJSON', 'price', 'locationID', 'metroID', 'lat', 'lon'], axis=1,
-    #             inplace=True)
+    print("Dropping columns: categoryID, title, attrsJSON, price , locationID, metroID, lat, lon")
+    reader.drop(['categoryID', 'title', 'attrsJSON', 'price', 'locationID', 'metroID', 'lat', 'lon'], axis=1,
+                inplace=True)
 
     rows_with_nan_img_array = reader.index[reader['images_array'].isna() == True].tolist()
     print("Ads without images: " + str(len(rows_with_nan_img_array)))
@@ -206,3 +205,60 @@ def select_random_image(ids_array, array, seed):
     d['image_id'] = images_list
 
     return pd.DataFrame(data=d)
+
+
+def remove_pairs(dataframe, ids):
+    print("Get all pair indecies...")
+    dataframe_ids = (set(dataframe.itemID_1) | set(dataframe.itemID_2))
+    ids = set(ids)
+    difference = list(dataframe_ids - ids)
+
+    rows_id1 = dataframe.index[dataframe.itemID_1.isin(difference)].tolist()
+    rows_id2 = dataframe.index[dataframe.itemID_2.isin(difference)].tolist()
+
+    rows_to_delete = list(set(rows_id1) | set(rows_id2))
+
+    print("There are " + str(len(rows_to_delete)) + " rows in the pairs dataset that need to be deleted.")
+    print("Deleting rows ...")
+    dataframe.drop(index=rows_to_delete, inplace=True)
+
+    return dataframe
+
+
+def split_to_train_val(dataframe):
+    # Get indecies for each row
+    indecies = dataframe.index.values
+    # Shuffle the array
+    np.random.shuffle(indecies)
+    length = indecies.shape[0]
+
+    # Take the first 70% of the shuffled array
+    train_indecies = indecies[0:int(length * 0.7)]
+    # Take the last 30% of the shuffled array
+    val_indecies = indecies[int(length * 0.7):length + 1]
+
+    # Return parts of the original dataframe
+    return dataframe.loc[train_indecies], dataframe.loc[val_indecies]
+
+
+def subsample_data(dataframe, num_instances):
+    # Split the indecies from the dataframe to similar/disimilar
+    df_pos = dataframe[dataframe.isDuplicate == 1].index.values
+    df_neg = dataframe[dataframe.isDuplicate == 0].index.values
+
+    r = len(df_pos) * 1.0 / len(df_neg)
+    # We assume that the negative class is more prevalent
+    # in the training dataset than the positive class
+    choose_neg = int(num_instances * r)
+    choose_pos = num_instances - choose_neg
+
+    # Randomly choose indecies from the postive and negative set
+    positive_id = np.random.choice(df_pos, choose_pos)
+    negative_id = np.random.choice(df_neg, choose_neg)
+
+    # Combine the randomly chosen indecies/rows
+    subset_index = np.concatenate((positive_id, negative_id))
+
+    result = dataframe.loc[subset_index]
+
+    return result
