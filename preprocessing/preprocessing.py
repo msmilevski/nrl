@@ -16,6 +16,7 @@ if sys.argv[1] == 'rusVec':
 random_image = preprocess.select_random_image(ids.tolist(), image_arrays, seed=seed)
 
 if len(rows_with_nan_desc) > 0:
+    print("Dropping " + str(len(rows_with_nan_desc)) + " rows from the random image table.")
     random_image.drop(index=rows_with_nan_desc, inplace=True)
 
 if sys.argv[2] == 'training':

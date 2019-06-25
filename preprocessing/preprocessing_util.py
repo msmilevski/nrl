@@ -79,7 +79,7 @@ def preprocess_corpus(id_data, text_data, lemmatization):
     print("Number of description that are empty after preprocessing: " + str(len(rows_with_nan_desc)))
 
     if len(rows_with_nan_desc) > 0:
-        print("Deleting rows ...")
+        print("Deleting " + str(len(rows_with_nan_desc)) +" rows ...")
         d.drop(index=rows_with_nan_desc, inplace=True)
 
     return d, rows_with_nan_desc
