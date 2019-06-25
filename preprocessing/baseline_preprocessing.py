@@ -1,5 +1,6 @@
 import h5py
 import sys
+import numpy as np
 
 
 def remove_element(array, element):
@@ -20,7 +21,7 @@ print(source_descriptions[0])
 elements = [0, 1, 2]
 
 for desc in source_descriptions:
-    array = desc
+    array = np.array(desc)
     for elem in elements:
         array = remove_element(array, elem)
 

@@ -50,6 +50,7 @@ def preprocess_line(line, reg, mystem=None):
         line = mystem.lemmatize(line)
         line = "".join(line)
 
+    line = line.strip()
     return line
 
 
