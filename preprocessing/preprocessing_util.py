@@ -59,28 +59,37 @@ def preprocess_corpus(id_data, text_data, lemmatization):
     reg = re.compile('[^a-z^A-Z^0-9^А-я^\s*]')
 
     descriptions = []
+    item_ids = []
+    rows_with_nan_desc = []
 
+    id_data = id_data.tolist()
     if lemmatization == True:
         mystem = Mystem()
 
     print("Lemmatization: " + str(lemmatization))
     for i, descrption in tqdm(enumerate(text_data)):
         if lemmatization == True:
-            descriptions.append(preprocess_line(descrption, reg, mystem))
+            temp_line = preprocess_line(descrption, reg, mystem)
         else:
-            descriptions.append(preprocess_line(descrption, reg))
+            temp_line = preprocess_line(descrption, reg)
+
+        if len(temp_line) > 0:
+            descriptions.append(temp_line)
+            item_ids.append(id_data[i])
+        else:
+            rows_with_nan_desc.append(id_data[i])
+
 
     d = {}
-    d['itemID'] = id_data.tolist()
+    d['itemID'] = item_ids
     d['descriptions'] = descriptions
 
     d = pd.DataFrame(data=d)
-    rows_with_nan_desc = d.index[d['descriptions'].isna() == True].tolist()
     print("Number of description that are empty after preprocessing: " + str(len(rows_with_nan_desc)))
 
-    if len(rows_with_nan_desc) > 0:
-        print("Deleting " + str(len(rows_with_nan_desc)) +" rows ...")
-        d.drop(index=rows_with_nan_desc, inplace=True)
+    # if len(rows_with_nan_desc) > 0:
+    #     print("Deleting " + str(len(rows_with_nan_desc)) +" rows ...")
+    #     d.drop(index=rows_with_nan_desc, inplace=True)
 
     return d, rows_with_nan_desc
 
