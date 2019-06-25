@@ -16,17 +16,18 @@ dataframe = pd.read_csv(data_file_path, encoding='utf-8')
 # Remove pairs that are not present in the description dataset
 dataframe = preprocessing.remove_pairs(dataframe, ids)
 
+additional_prefix = ""
 if num_subsamples != -1:
     # Subsample the dataset
     print("Subsampling data to " + str(num_subsamples) + " samples.")
     dataframe = preprocessing.subsample_data(dataframe, num_subsamples)
+    additional_prefix = "subsample"
 
 if do_split:
     print("Split the dataset to training and validation...")
     # Make train valid split
     train_dataset, val_dataset = preprocessing.split_to_train_val(dataframe)
-    train_dataset.to_csv("/dataset/avito-duplicate-ads-detection/ItemPairs_train_processed.csv", encoding='utf-8')
-    val_dataset.to_csv("/dataset/avito-duplicate-ads-detection/ItemPairs_val_processed.csv", encoding='utf-8')
+    train_dataset.to_csv("dataset/avito-duplicate-ads-detection/" + additional_prefix + "ItemPairs_train_processed.csv", encoding='utf-8')
+    val_dataset.to_csv("dataset/avito-duplicate-ads-detection/" + additional_prefix + "ItemPairs_val_processed.csv", encoding='utf-8')
 else:
-    print("Heyooo")
-    dataframe.to_csv("/dataset/avito-duplicate-ads-detection/ItemPairs_test_processed.csv", encoding='utf-8')
+    dataframe.to_csv("dataset/avito-duplicate-ads-detection/" + additional_prefix + "ItemPairs_test_processed.csv", encoding='utf-8')
