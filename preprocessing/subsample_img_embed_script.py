@@ -33,11 +33,11 @@ for idx in range(len(pairs)):
     item_1_img = image_ids[position_item_1]
     item_2_img = image_ids[position_item_2]
 
-    if not(item_1_img[0] in img_embed):
-        img_embed[item_1_img[0]] = get_image_embedding(img_embed_dir, item_1_img[0])
+    if not(item_1_img in img_embed):
+        img_embed[item_1_img] = get_image_embedding(img_embed_dir, item_1_img)
 
-    if not(item_2_img[0] in img_embed):
-        img_embed[item_2_img[0]] = get_image_embedding(img_embed_dir, item_2_img[0])
+    if not(item_2_img in img_embed):
+        img_embed[item_2_img] = get_image_embedding(img_embed_dir, item_2_img)
 
 
 file = h5py.File('subsampled_img_embed.hdf5', 'w')
