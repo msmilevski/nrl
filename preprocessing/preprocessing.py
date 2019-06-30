@@ -23,8 +23,10 @@ if sys.argv[2] == 'training':
     frequency = preprocess.create_word_frequency_document(descriptions['descriptions'], path_to_json_file=None)
     vocabulary = preprocess.generate_vocabulary(word_frequency_file=frequency, vocabulary_file=sys.argv[4],
                                                 vocabulary_size=10000)
-    preprocess.sentences_to_indecies(descriptions['itemID'].tolist(), descriptions['descriptions'], random_image['image_id'].tolist(),
+    preprocess.sentences_to_indecies(descriptions['itemID'].tolist(), descriptions['descriptions'],
+                                     random_image['image_id'].tolist(),
                                      processed_text_file_path=sys.argv[5], vocab_file=vocabulary, max_length=100)
 else:
-    preprocess.sentences_to_indecies(descriptions['itemID'].tolist(), descriptions['descriptions'], random_image['image_id'].tolist(),
+    preprocess.sentences_to_indecies(descriptions['itemID'].tolist(), descriptions['descriptions'],
+                                     random_image['image_id'].tolist(),
                                      processed_text_file_path=sys.argv[5], vocab_file=sys.argv[4], max_length=100)
