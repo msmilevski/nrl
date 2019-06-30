@@ -6,9 +6,9 @@ import sys
 
 def get_image_embedding(images_dir, image_id):
     folder_id = image_id % 100
-    img_data = h5py.File(images_dir + "/image_features_" + str(folder_id) + ".hdf5", 'r')
-    position_item = np.argwhere(img_data['image_id'].value == image_id)[0][0]
-    return img_data['image_features'].value[position_item]
+    with h5py.File(images_dir + "/image_features_" + str(folder_id) + ".hdf5", 'r') as img_data:
+        position_item = np.argwhere(img_data['image_id'].value == image_id)[0][0]
+        return img_data['image_features'].value[position_item]
 
 
 pair_file_path = sys.argv[1]
