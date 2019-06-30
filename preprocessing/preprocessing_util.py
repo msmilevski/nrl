@@ -80,17 +80,12 @@ def preprocess_corpus(id_data, text_data, lemmatization):
         else:
             rows_with_nan_desc.append(i)
 
-
     d = {}
     d['itemID'] = item_ids
     d['descriptions'] = descriptions
 
     d = pd.DataFrame(data=d)
     print("Number of description that are empty after preprocessing: " + str(len(rows_with_nan_desc)))
-
-    # if len(rows_with_nan_desc) > 0:
-    #     print("Deleting " + str(len(rows_with_nan_desc)) +" rows ...")
-    #     d.drop(index=rows_with_nan_desc, inplace=True)
 
     return d, rows_with_nan_desc
 
@@ -272,3 +267,21 @@ def subsample_data(dataframe, num_instances):
     result = dataframe.loc[subset_index]
 
     return result
+
+
+def remove_element(array, element):
+    return array[array != element]
+
+
+def baseline_preprocessing(source_descriptions):
+    target_descriptions = []
+    elements = [0, 1, 2]
+
+    for desc in source_descriptions:
+        array = np.array(desc)
+        for elem in elements:
+            array = remove_element(array, elem)
+
+        target_descriptions.append(array.tolist())
+
+    return target_descriptions
