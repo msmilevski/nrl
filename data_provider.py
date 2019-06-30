@@ -4,13 +4,14 @@ import pandas as pd
 import numpy as np
 # Ignore warinings
 import warnings
+import preprocessing.preprocessing_util as util
 
 warnings.filterwarnings("ignore")
 
 
 class DatasetProvider(Dataset):
 
-    def __init__(self, pair_file_path, data_file_path, images_dir, transform=None):
+    def __init__(self, pair_file_path, data_file_path, images_dir, transform=None, isBaseline=False):
         '''
         Class that creates the dataset online, using the ids from the pairs dataset
         :param pair_file_path: path to the Pairs dataset
@@ -26,18 +27,16 @@ class DatasetProvider(Dataset):
         self.images_dir = images_dir
         self.transform = transform
         self.item_idx = data['itemID'].value
-        self.descriptions = data['descriptions'].value
         self.image_ids = data['image_id'].value
-        # # Create a dictionary with the description data (itemID : description)
-        # self.descriptions = self.create_dict(data['itemID'], data['descriptions'])
-        # print("Desc dictionary is created")
-        # # Create a dictionary with the image_id data (itemID : image_id)
-        # self.image_ids = self.create_dict(data['itemID'], data['image_id'])
-        # print("Image id dict is created")
+
+        if isBaseline:
+            self.descriptions = util.baseline_preprocessing(data['descriptions'].value)
+        else:
+            self.descriptions = data['descriptions'].value
 
     def get_image_embedding(self, image_id):
         folder_id = image_id % 100
-        img_data = h5py.File(self.images_dir+"/image_features_" + str(folder_id)+".hdf5", 'r')
+        img_data = h5py.File(self.images_dir + "/image_features_" + str(folder_id) + ".hdf5", 'r')
         position_item = np.argwhere(img_data['image_id'].value == image_id)[0][0]
         return img_data['image_features'].value[position_item]
 
@@ -54,20 +53,13 @@ class DatasetProvider(Dataset):
 
         position_item_1 = np.argwhere(self.item_idx == item_1_id)[0][0]
         position_item_2 = np.argwhere(self.item_idx == item_2_id)[0][0]
-        print(position_item_1)
-        print(position_item_2)
 
         item_1_desc = self.descriptions[position_item_1]
         item_2_desc = self.descriptions[position_item_2]
         item_1_img = self.image_ids[position_item_1]
         item_2_img = self.image_ids[position_item_2]
 
-        print("Item 1 desc: " + str(item_1_desc))
-        print("Item 2 desc: " + str(item_2_desc))
-        print("Item 1 img: " + str(item_1_img))
-        print("Item 2 img: " + str(item_2_img))
+        # img_1 = self.get_image_embedding(item_1_img[0])
+        # img_2 = self.get_image_embedding(item_2_img[0])
 
-        img_1 = self.get_image_embedding(item_1_img[0])
-        img_2 = self.get_image_embedding(item_2_img[0])
-
-        return {'desc1': item_1_desc, 'image_1': img_1, 'desc2': item_2_desc, 'image_2': img_2, 'target': y}
+        return {'desc1': item_1_desc, 'image_1': item_1_img, 'desc2': item_2_desc, 'image_2': item_2_img, 'target': y}
