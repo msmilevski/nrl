@@ -78,7 +78,7 @@ def preprocess_corpus(id_data, text_data, lemmatization):
             descriptions.append(temp_line)
             item_ids.append(int(id_data[i]))
         else:
-            rows_with_nan_desc.append(int(id_data[i]))
+            rows_with_nan_desc.append(i)
 
 
     d = {}
