@@ -37,7 +37,7 @@ class ImageDataset(Dataset):
 
     def __getitem__(self, idx):
         img_path = self.image_paths[idx]
-        img_id = int(img_path.split("\\")[-1].split(".")[0])
+        img_id = int(img_path.split("/")[-1].split(".")[0])
         image = cv2.imread(img_path)
 
         if image.shape[2] == 3:
