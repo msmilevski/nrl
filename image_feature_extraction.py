@@ -43,7 +43,7 @@ class ImageDataset(Dataset):
         if not(image is None):
             image = image[:,:,:3]
         else:
-            image = np.zeros((256, 256, 3))
+            image = np.zeros((256, 256, 3),dtype=float)
 
         if self.transform:
             sample = self.transform(image)
