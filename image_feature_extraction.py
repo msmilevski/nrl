@@ -38,7 +38,12 @@ class ImageDataset(Dataset):
     def __getitem__(self, idx):
         img_path = self.image_paths[idx]
         img_id = int(img_path.split("\\")[-1].split(".")[0])
-        image = cv2.imread(img_path)[:, :, :3]
+        image = cv2.imread(img_path)
+
+        if image.shape[2] == 3:
+            image = image[:,:,:3]
+        else:
+            image = image[:, :, :1]
 
         if self.transform:
             sample = self.transform(image)
