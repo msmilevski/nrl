@@ -40,10 +40,8 @@ class ImageDataset(Dataset):
         img_id = int(img_path.split("/")[-1].split(".")[0])
         image = cv2.imread(img_path)
 
-        if image.shape[2] == 3:
+        if not(image is None):
             image = image[:,:,:3]
-        else:
-            image = image[:, :, :1]
 
         if self.transform:
             sample = self.transform(image)
