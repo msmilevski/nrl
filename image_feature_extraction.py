@@ -42,6 +42,8 @@ class ImageDataset(Dataset):
 
         if not(image is None):
             image = image[:,:,:3]
+        else:
+            image = np.zeros((256, 256, 3))
 
         if self.transform:
             sample = self.transform(image)
