@@ -230,7 +230,7 @@ def remove_pairs(dataframe, ids):
     return dataframe
 
 
-def split_to_train_val(dataframe):
+def split_to_train_val_test(dataframe):
     # Get indecies for each row
     indecies = dataframe.index.values
     # Shuffle the array
@@ -238,12 +238,13 @@ def split_to_train_val(dataframe):
     length = indecies.shape[0]
 
     # Take the first 70% of the shuffled array
-    train_indecies = indecies[0:int(length * 0.7)]
+    train_indecies = indecies[0:int(length * 0.8)]
     # Take the last 30% of the shuffled array
-    val_indecies = indecies[int(length * 0.7):length + 1]
+    val_indecies = indecies[int(length * 0.8):int(length * 0.9)]
+    test_indecies = indecies[int(length * 0.9):length + 1]
 
     # Return parts of the original dataframe
-    return dataframe.loc[train_indecies], dataframe.loc[val_indecies]
+    return dataframe.loc[train_indecies], dataframe.loc[val_indecies], dataframe.loc[test_indecies]
 
 
 def subsample_data(dataframe, num_instances):
