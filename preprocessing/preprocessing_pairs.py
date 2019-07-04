@@ -26,8 +26,7 @@ if num_subsamples != -1:
 if do_split:
     print("Split the dataset to training and validation...")
     # Make train valid split
-    train_dataset, val_dataset = preprocessing.split_to_train_val(dataframe)
+    train_dataset, val_dataset, test_dataset = preprocessing.split_to_train_val(dataframe)
     train_dataset.to_csv("dataset/avito-duplicate-ads-detection/" + additional_prefix + "ItemPairs_train_processed.csv", encoding='utf-8')
     val_dataset.to_csv("dataset/avito-duplicate-ads-detection/" + additional_prefix + "ItemPairs_val_processed.csv", encoding='utf-8')
-else:
-    dataframe.to_csv("dataset/avito-duplicate-ads-detection/" + additional_prefix + "ItemPairs_test_processed.csv", encoding='utf-8')
+    test_dataset.to_csv("dataset/avito-duplicate-ads-detection/" + additional_prefix + "ItemPairs_test_processed.csv", encoding='utf-8')
