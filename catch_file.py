@@ -15,6 +15,8 @@ paths = ['/home/s1885778/nrl/dataset/Images_/Images_9/95/',
          '/home/s1885778/nrl/dataset/Images_/Images_1/13/',
          '/home/s1885778/nrl/dataset/Images_/Images_1/14/']
 
+log_file = open('log_file.txt', 'w')
+
 for root_dir in paths:
     paths = [y for x in os.walk(root_dir) for y in glob(os.path.join(x[0], "*.jpg"))]
 
@@ -23,5 +25,7 @@ for root_dir in paths:
         image = cv2.imread(img_path)
 
         if image is None:
-            print(img_path)
-
+            #print(img_path)
+            os.remove(img_path)
+            print("File " + img_path + " removed!")
+            log_file.write(img_path)
