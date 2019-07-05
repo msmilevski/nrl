@@ -38,16 +38,6 @@ class BaselineModel(nn.Module):
     def build_model(self, input_dim):
         self.model = LogisticRegression(input_dim)
 
-    def remove_element(array, element):
-        return array[array != element]
-
-    def preprocess_desc(self, desc):
-        array = np.array(desc)
-        for elem in self.elements:
-            array = self.remove_element(array, elem)
-
-        return array
-
     def feature_engineering(self, x):
         # return {'desc1': item_1_desc, 'image_1': img_1, 'desc2': item_2_desc, 'image_2': img_2, 'target': y}
         desc_1_batch = x[0]
@@ -58,7 +48,7 @@ class BaselineModel(nn.Module):
         batch_x = []
 
         for i in range(desc_1_batch.shape[0]):
-            feature_1 = jaccard_similarity(self.preprocess_desc(desc_1_batch[i]), self.preprocess_desc(desc_2_batch[i]))
+            feature_1 = jaccard_similarity(desc_1_batch[i], desc_2_batch[i])
             feature_2 = euclidean_distance(img_1_batch[i], img_2_batch[i])
             batch_x.append([feature_1, feature_2])
 
