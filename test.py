@@ -10,7 +10,7 @@ from tqdm import tqdm
 composed = transforms.ToTensor()
 dataset = DatasetProvider(pair_file_path='dataset/ItemPairs_train_processed.csv',
                           data_file_path='dataset/fasttext_data.hdf5',
-                          images_dir='')
+                          images_dir='dataset/resnet152/', isBaseline=True)
 print(len(dataset))
 dataloader = DataLoader(dataset, batch_size=2, shuffle=True, num_workers=0)
 
