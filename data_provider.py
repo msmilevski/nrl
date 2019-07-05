@@ -36,9 +36,10 @@ class DatasetProvider(Dataset):
 
     def get_image_embedding(self, image_id):
         folder_id = image_id % 100
-        img_data = h5py.File(self.images_dir + "/image_features_" + str(folder_id) + ".hdf5", 'r')
-        position_item = np.argwhere(img_data['image_id'].value == image_id)[0][0]
-        return img_data['image_features'].value[position_item]
+        with h5py.File(self.images_dir + "/image_features_" + str(folder_id) + ".hdf5", 'r') as img_data:
+            ids = img_data['image_id'][()]
+            position_item = np.argwhere(ids == image_id)[0][0]
+            return img_data['image_features'][position_item]
 
     def __len__(self):
         return self.pairs.shape[0]
@@ -59,7 +60,7 @@ class DatasetProvider(Dataset):
         item_1_img = self.image_ids[position_item_1]
         item_2_img = self.image_ids[position_item_2]
 
-        # img_1 = self.get_image_embedding(item_1_img[0])
-        # img_2 = self.get_image_embedding(item_2_img[0])
+        img_1 = self.get_image_embedding(item_1_img[0])
+        img_2 = self.get_image_embedding(item_2_img[0])
 
-        return {'desc1': item_1_desc, 'image_1': item_1_img, 'desc2': item_2_desc, 'image_2': item_2_img, 'target': y}
+        return {'desc1': item_1_desc, 'image_1': img_1, 'desc2': item_2_desc, 'image_2': img_2, 'target': y}
