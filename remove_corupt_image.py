@@ -13,7 +13,8 @@ paths = ['/home/s1885778/nrl/dataset/Images_/Images_9/95/',
          '/home/s1885778/nrl/dataset/Images_/Images_4/41/',
          '/home/s1885778/nrl/dataset/Images_/Images_3/36/',
          '/home/s1885778/nrl/dataset/Images_/Images_1/13/',
-         '/home/s1885778/nrl/dataset/Images_/Images_1/14/']
+         '/home/s1885778/nrl/dataset/Images_/Images_1/14/',
+         '/home/s1885778/nrl/dataset/Images_/Images_5/54/']
 
 log_file = open('log_file.txt', 'w')
 
