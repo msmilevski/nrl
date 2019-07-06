@@ -60,7 +60,7 @@ class DatasetProvider(Dataset):
         item_1_img = self.image_ids[position_item_1]
         item_2_img = self.image_ids[position_item_2]
 
-        img_1 = self.get_image_embedding(item_1_img[0])
-        img_2 = self.get_image_embedding(item_2_img[0])
+        img_1 = self.get_image_embedding(int(item_1_img))
+        img_2 = self.get_image_embedding(int(item_2_img))
 
         return {'desc1': item_1_desc, 'image_1': img_1, 'desc2': item_2_desc, 'image_2': img_2, 'target': y}
