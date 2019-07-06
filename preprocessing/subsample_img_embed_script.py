@@ -15,6 +15,7 @@ def get_image_embedding(images_dir, image_id):
 pair_file_path = sys.argv[1]
 desc_file_path = sys.argv[2]
 img_embed_dir = sys.argv[3]
+type_of_set = sys.argv[4]
 pairs = pd.read_csv(pair_file_path, encoding='utf-8')
 data = h5py.File(desc_file_path, 'r')
 
@@ -41,6 +42,6 @@ for idx in range(len(pairs)):
         img_embed[item_2_img] = get_image_embedding(img_embed_dir, item_2_img)
 
 
-file = h5py.File('subsampled_img_embed.hdf5', 'w')
+file = h5py.File('subsampled_' + type_of_set + '_img_embed.hdf5', 'w')
 file.create_dataset('img_id', data=list(img_embed.keys()))
 file.create_dataset('img_embed', data=list(img_embed.values()))
