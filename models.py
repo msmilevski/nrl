@@ -47,7 +47,7 @@ class BaselineModel(nn.Module):
 
         batch_x = []
 
-        for i in range(desc_1_batch.shape[0]):
+        for i in range(len(desc_1_batch)):
             feature_1 = jaccard_similarity(desc_1_batch[i], desc_2_batch[i])
             feature_2 = euclidean_distance(img_1_batch[i], img_2_batch[i])
             batch_x.append([feature_1, feature_2])
