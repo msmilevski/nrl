@@ -19,8 +19,8 @@ type_of_set = sys.argv[4]
 pairs = pd.read_csv(pair_file_path, encoding='utf-8')
 data = h5py.File(desc_file_path, 'r')
 
-item_idx = data['itemID'].value
-image_ids = data['image_id'].value
+item_idx = data['itemID'][()]
+image_ids = data['image_id'][()]
 img_embed = {}
 
 for idx in range(len(pairs)):
