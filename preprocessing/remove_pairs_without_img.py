@@ -3,6 +3,7 @@ import h5py
 import pandas as pd
 import sys
 
+log_file = open('log_file.txt', 'w')
 
 def is_image_embedding(images_dir, image_id):
     folder_id = image_id % 100
@@ -10,6 +11,7 @@ def is_image_embedding(images_dir, image_id):
         ids = img_data['image_id'][()]
         position_item = np.argwhere(ids == image_id)
         if position_item.size == 0:
+            log_file.write(str(image_id) + '\n')
             return False
         return True
 
