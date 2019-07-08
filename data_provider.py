@@ -11,7 +11,7 @@ warnings.filterwarnings("ignore")
 
 class DatasetProvider(Dataset):
 
-    def __init__(self, pair_file_path, data_file_path, images_dir, transform=None, isBaseline=False):
+    def __init__(self, pair_file_path, data_file_path, images_dir, transform=None):
         '''
         Class that creates the dataset online, using the ids from the pairs dataset
         :param pair_file_path: path to the Pairs dataset
@@ -21,19 +21,12 @@ class DatasetProvider(Dataset):
         '''
         # Read data
         self.pairs = pd.read_csv(pair_file_path, encoding='utf-8')
-        print("Opened the pairs dataset")
         data = h5py.File(data_file_path, 'r')
-        print("Opened the hdf5 file")
         self.images_dir = images_dir
         self.transform = transform
         self.item_idx = data['itemID'][()]
         self.image_ids = data['image_id'][()]
-
-        if isBaseline:
-            print("Preprocessing for baseline model ...")
-            self.descriptions = util.baseline_preprocessing(data['descriptions'][()])
-        else:
-            self.descriptions = data['descriptions'][()]
+        self.descriptions = data['descriptions'][()]
 
     def get_image_embedding(self, image_id):
         folder_id = image_id % 100
