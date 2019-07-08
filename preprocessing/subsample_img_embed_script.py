@@ -8,7 +8,11 @@ def get_image_embedding(images_dir, image_id):
     folder_id = image_id % 100
     with h5py.File(images_dir + "/image_features_" + str(folder_id) + ".hdf5", 'r') as img_data:
         ids = img_data['image_id'][()]
-        position_item = np.argwhere(ids == image_id)[0][0]
+        position_item = np.argwhere(ids == image_id)
+        print(image_id)
+        print(folder_id)
+        print(position_item)
+        position_item = position_item[0][0]
         return img_data['image_features'][position_item]
 
 
