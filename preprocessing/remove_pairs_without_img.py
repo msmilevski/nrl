@@ -9,7 +9,7 @@ def is_image_embedding(images_dir, image_id):
     with h5py.File(images_dir + "/image_features_" + str(folder_id) + ".hdf5", 'r') as img_data:
         ids = img_data['image_id'][()]
         position_item = np.argwhere(ids == image_id)
-        if position_item == []:
+        if position_item.size == 0:
             return False
         return True
 
