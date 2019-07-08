@@ -17,7 +17,6 @@ def is_image_embedding(images_dir, image_id):
 pair_file_path = sys.argv[1]
 desc_file_path = sys.argv[2]
 img_embed_dir = sys.argv[3]
-type_of_set = sys.argv[4]
 pairs = pd.read_csv(pair_file_path, encoding='utf-8')
 data = h5py.File(desc_file_path, 'r')
 
