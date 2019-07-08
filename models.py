@@ -48,8 +48,8 @@ class BaselineModel(nn.Module):
         batch_x = []
 
         for i in range(len(desc_1_batch)):
-            feature_1 = jaccard_similarity(desc_1_batch[i], desc_2_batch[i])
-            feature_2 = euclidean_distance(img_1_batch[i], img_2_batch[i])
+            feature_1 = jaccard_similarity(desc_1_batch[i].numpy(), desc_2_batch[i].numpy())
+            feature_2 = euclidean_distance(img_1_batch[i].numpy(), img_2_batch[i].numpy())
             batch_x.append([feature_1, feature_2])
 
         batch_x = torch.from_numpy(np.array(batch_x))
