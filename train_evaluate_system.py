@@ -47,13 +47,13 @@ num_output_classes = 2
 if args.model_name == 'baseline':
     model = BaselineModel(input_dim=2)
 
-#
-# conv_experiment = ExperimentBuilder(network_model=custom_conv_net,
-#                                     experiment_name=args.experiment_name,
-#                                     num_epochs=args.num_epochs,
-#                                     weight_decay_coefficient=args.weight_decay_coefficient,
-#                                     continue_from_epoch=args.continue_from_epoch,
-#                                     device=device,
-#                                     train_data=train_data, val_data=val_data,
-#                                     test_data=test_data)  # build an experiment object
+
+conv_experiment = ExperimentBuilder(network_model=model,
+                                    experiment_name=args.experiment_name,
+                                    num_epochs=args.num_epochs,
+                                    weight_decay_coefficient=args.weight_decay_coefficient,
+                                    continue_from_epoch=args.continue_from_epoch,
+                                    device=device,
+                                    train_data=training_data, val_data=valid_data,
+                                    test_data=test_data)  # build an experiment object
 # experiment_metrics, test_metrics = conv_experiment.run_experiment()  # run experiment and return experiment metrics
