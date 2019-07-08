@@ -8,7 +8,6 @@ import operator
 import h5py
 import numpy as np
 
-
 def initial_preprocess(info_path):
     print("Start of the preprocessing process for the items in: " + info_path)
     print("Reading file ...")
@@ -274,15 +273,10 @@ def remove_element(array, element):
     return array[array != element]
 
 
-def baseline_preprocessing(source_descriptions):
-    target_descriptions = []
+def baseline_preprocessing(source_description):
     elements = [0, 1, 2]
+    array = np.array(source_description)
+    for elem in elements:
+        array = remove_element(array, elem)
 
-    for desc in source_descriptions:
-        array = np.array(desc)
-        for elem in elements:
-            array = remove_element(array, elem)
-
-        target_descriptions.append(array.tolist())
-
-    return target_descriptions
+    return array
