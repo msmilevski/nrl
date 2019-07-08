@@ -4,9 +4,12 @@ import torch.nn as nn
 from torch.autograd import Variable
 from torch.nn import functional as F
 from math import *
+from preprocessing.preprocessing_util import baseline_preprocessing
 
 
 def jaccard_similarity(x, y):
+    x = baseline_preprocessing(x)
+    y = baseline_preprocessing(y)
     intersection_cardinality = len(set.intersection(*[set(x), set(y)]))
     union_cardinality = len(set.union(*[set(x), set(y)]))
     return intersection_cardinality / float(union_cardinality)
