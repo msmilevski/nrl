@@ -1,0 +1,12 @@
+{
+  "batch_size": 64,
+  "model_name": "baseline",
+  "dataset_name": "baseline",
+  "continue_from_epoch": -2,
+  "seed": 0,
+  "num_epochs": 100,
+  "experiment_name": "baseline_experiment",
+  "use_gpu": true,
+  "gpu_id": "0",
+  "weight_decay_coefficient": 1e-05
+}
