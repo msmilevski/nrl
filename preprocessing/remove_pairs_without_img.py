@@ -40,7 +40,7 @@ for idx in range(len(pairs)):
     is_img_1 = is_image_embedding(img_embed_dir, item_1_img)
     is_img_2 = is_image_embedding(img_embed_dir, item_2_img)
 
-    if (is_img_1 and is_img_2):
+    if not((is_img_1 and is_img_2)):
         del_rows.append(idx)
 
 pairs.drop(index=del_rows, inplace=True)
