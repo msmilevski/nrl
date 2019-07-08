@@ -26,20 +26,22 @@ class DatasetProvider(Dataset):
         print("Opened the hdf5 file")
         self.images_dir = images_dir
         self.transform = transform
-        self.item_idx = data['itemID'].value
-        self.image_ids = data['image_id'].value
+        self.item_idx = data['itemID'][()]
+        self.image_ids = data['image_id'][()]
 
         if isBaseline:
-            self.descriptions = util.baseline_preprocessing(data['descriptions'].value)
+            print("Preprocessing for baseline model ...")
+            self.descriptions = util.baseline_preprocessing(data['descriptions'][()])
         else:
-            self.descriptions = data['descriptions'].value
+            self.descriptions = data['descriptions'][()]
 
     def get_image_embedding(self, image_id):
         folder_id = image_id % 100
         with h5py.File(self.images_dir + "/image_features_" + str(folder_id) + ".hdf5", 'r') as img_data:
-            ids = img_data['image_id'][()]
+        #with h5py.File('dataset/subsampled_train_img_embed.hdf5', 'r') as img_data:
+            ids = img_data['img_id'][()]
             position_item = np.argwhere(ids == image_id)[0][0]
-            return img_data['image_features'][position_item]
+            return img_data['img_embed'][position_item]
 
     def __len__(self):
         return self.pairs.shape[0]
