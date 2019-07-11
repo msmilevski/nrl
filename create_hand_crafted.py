@@ -16,7 +16,7 @@ def jaccard_similarity(x, y):
 
 def euclidean_distance(x, y):
     return sqrt(sum(pow(a - b, 2) for a, b in zip(x, y)))
-
+# this here is so the threads don't get cancel on the Cluster
 torch.multiprocessing.set_sharing_strategy('file_system')
 type_of_dataset = sys.argv[1]
 dataset = DatasetProvider(pair_file_path='dataset/ItemPairs_' + type_of_dataset + '_processed.csv',
