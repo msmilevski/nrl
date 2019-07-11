@@ -17,6 +17,8 @@ def jaccard_similarity(x, y):
 def euclidean_distance(x, y):
     return sqrt(sum(pow(a - b, 2) for a, b in zip(x, y)))
 
+torch.multiprocessing.set_sharing_strategy('file_system')
+
 dataset = DatasetProvider(pair_file_path='dataset/ItemPairs_train_processed.csv',
                           data_file_path='dataset/fasttext_data.hdf5',
                           images_dir='dataset/resnet152')
