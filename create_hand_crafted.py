@@ -4,6 +4,7 @@ import pandas as pd
 from torch.utils.data import DataLoader
 from data_provider import DatasetProvider
 from math import *
+import sys
 from preprocessing.preprocessing_util import baseline_preprocessing
 
 def jaccard_similarity(x, y):
@@ -13,13 +14,12 @@ def jaccard_similarity(x, y):
     union_cardinality = len(set.union(*[set(x), set(y)]))
     return intersection_cardinality / float(union_cardinality)
 
-
 def euclidean_distance(x, y):
     return sqrt(sum(pow(a - b, 2) for a, b in zip(x, y)))
 
 torch.multiprocessing.set_sharing_strategy('file_system')
-
-dataset = DatasetProvider(pair_file_path='dataset/ItemPairs_train_processed.csv',
+type_of_dataset = sys.argv[1]
+dataset = DatasetProvider(pair_file_path='dataset/ItemPairs_' + type_of_dataset + '_processed.csv',
                           data_file_path='dataset/fasttext_data.hdf5',
                           images_dir='dataset/resnet152')
 
@@ -47,4 +47,4 @@ data['feature_2'] = np.array(feature_2)
 data['y'] = np.array(y)
 
 df = pd.DataFrame(data=data)
-df.to_csv('dataset/Item_pairs_features_train.csv')
+df.to_csv('dataset/Item_pairs_features_' + type_of_dataset + '.csv')
