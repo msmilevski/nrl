@@ -7,6 +7,8 @@ import json
 import operator
 import h5py
 import numpy as np
+import io
+
 
 def initial_preprocess(info_path):
     print("Start of the preprocessing process for the items in: " + info_path)
@@ -280,3 +282,40 @@ def baseline_preprocessing(source_description):
         array = remove_element(array, elem)
 
     return array
+
+
+def load_vectors(fname, word_to_idx):
+    fin = io.open(fname, 'r', encoding='utf-8', newline='\n', errors='ignore')
+    n, d = map(int, fin.readline().split())
+    vocab_size = len(word_to_idx.keys())
+
+    embed_matrix = np.random.randn(vocab_size, d)
+
+    found_words = 0
+
+    print("Filling the embedding matrix has started.")
+    for line in tqdm(fin):
+        tokens = line.rstrip().split(' ')
+        word = tokens[0]
+        embedding = list(map(float, tokens[1:]))
+        if word in word_to_idx:
+            embed_matrix[word_to_idx[word]] = embedding
+            found_words += 1
+
+        print(found_words)
+        if found_words == (vocab_size - 4):
+            print("Filling up the embedding matrix has finished.")
+            break
+
+    return embed_matrix
+
+
+def save_embeddings(vocab_file_path='dataset/fasttext_vocab.json',
+                    pretrained_word_embed_file='dataset/cc.ru.300.vec',
+                    output_file='dataset/fasttext_embed_10000.npy'):
+    vocab = json.load(open(vocab_file_path))
+    word_to_idx = vocab['words_to_idx']
+    print("Vocab file is open.")
+    embedding_matrix = load_vectors(fname=pretrained_word_embed_file, word_to_idx=word_to_idx)
+    print("Embedding matrix is loaded/")
+    np.save(output_file, embedding_matrix)
