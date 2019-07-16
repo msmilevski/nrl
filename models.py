@@ -79,7 +79,6 @@ class VQAStandard(nn.Module):
         self.embedding_layer = self.create_embedding_layer(embedding_matrix)
         self.build_model()
 
-
     def create_embedding_layer(self, embedding_matrix):
         embedding_matrix = torch.from_numpy(embedding_matrix)
         return nn.Embedding.from_pretrained(embeddings=embedding_matrix)
@@ -133,9 +132,64 @@ class VQAStandard(nn.Module):
             item.reset_parameters()
 
 
+class SiameseNetwork(nn.Module):
+    def __init__(self, item_1_model, item_2_model, use_bias=True):
+        super(SiameseNetwork, self).__init__()
+        self.item_1_model = item_1_model
+        self.item_2_model = item_2_model
+        self.bias = use_bias
+        self.layer_dict = nn.ModuleDict()
+        self.build_model()
+
+    def build_model(self):
+        self.layer_dict['fcn1'] = nn.Linear(in_features=1024, out_features=512, bias=self.bias)
+        self.layer_dict['relu1'] = nn.ReLU(inplace=True)
+        self.layer_dict['fcn2'] = nn.Linear(in_features=512, out_features=2056, bias=self.bias)
+        self.layer_dict['relu2'] = nn.ReLU(inplace=True)
+        self.layer_dict['fcn3'] = nn.Linear(in_features=2056, out_features=2, bias=self.bias)
+
+    def forward_once(self, input):
+        out = input
+        out = self.layer_dict['fcn1'](out)
+        out = self.layer_dict['relu1'](out)
+        out = self.layer_dict['fcn2'](out)
+        out = self.layer_dict['relu2'](out)
+        out = self.layer_dict['fcn3'](out)
+        return out
+
+    def forward(self, input):
+        desc_1 = input[0]
+        img_embed_1 = input[1]
+        desc_2 = input[2]
+        img_embed_2 = input[3]
+
+        input_1 = [desc_1, img_embed_1]
+        input_2 = [desc_2, img_embed_2]
+
+        output_1 = self.item_1_model(input_1)
+        output_2 = self.item_2_model(input_2)
+
+        output_1 = self.forward_once(output_1)
+        output_2 = self.forward_once(output_2)
+
+        return output_1, output_2
+
+    def reset_parameteres(self):
+        self.item_1_model.reset_parameters()
+        self.item_2_model.reset_parameters()
+        for item in self.layer_dict.children():
+            item.reset_parameters()
+
 # seed = np.random.RandomState(seed=124)
 # embedding_matrix = np.load('dataset/fasttext_embed_10000.npy')
-# model = VQAStandard(desc_input_shape=(64, 102),
+# model_1 = VQAStandard(desc_input_shape=(64, 102),
+#                     img_input_shape=(64, 2048),
+#                     num_output_classes=2,
+#                     use_bias=True,
+#                     hidden_size=512,
+#                     embedding_matrix=embedding_matrix)
+#
+# model_2 = VQAStandard(desc_input_shape=(64, 102),
 #                     img_input_shape=(64, 2048),
 #                     num_output_classes=2,
 #                     use_bias=True,
@@ -144,4 +198,6 @@ class VQAStandard(nn.Module):
 #
 # desc, img_embed = torch.from_numpy(np.random.randint(100, size=(64, 102))).type(torch.long), \
 #                   torch.from_numpy(np.random.randn(64, 2048)).type(torch.float)
-# model([desc, img_embed])
+#
+# siamese_model = SiameseNetwork(model_1, model_2, use_bias = True)
+# siamese_model([desc, img_embed, desc, img_embed])
