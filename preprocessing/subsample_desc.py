@@ -3,8 +3,8 @@ import pandas as pd
 import numpy as np
 import sys
 
-pair_file_paths = ['dataset/subsampleItemPairs_test_processed.csv', 'dataset/subsampleItemPairs_train_processed.csv',
-                   'dataset/subsampleItemPairs_val_processed.csv']
+pair_file_paths = ['dataset/subsampledItemPairs_test_processed.csv', 'dataset/subsampledItemPairs_train_processed.csv',
+                   'dataset/subsampledItemPairs_val_processed.csv']
 data_file_path = 'dataset/fasttext_data.hdf5'
 data = h5py.File(data_file_path, 'r')
 
