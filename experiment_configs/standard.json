@@ -4,7 +4,7 @@
   "dataset_name": "baseline",
   "continue_from_epoch": -2,
   "seed": 0,
-  "num_epochs": 100,
+  "num_epochs": 400,
   "experiment_name": "baseline_experiment",
   "use_gpu": true,
   "gpu_id": "0",
