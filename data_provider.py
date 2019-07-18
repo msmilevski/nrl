@@ -39,15 +39,15 @@ class DatasetProvider(Dataset):
 
     def get_image_embedding(self, image_id):
         folder_id = image_id % 100
-        #with h5py.File(self.images_dir + "/image_features_" + str(folder_id) + ".hdf5", 'r') as img_data:
-        with h5py.File(self.images_dir, 'r') as img_data:
+        with h5py.File(self.images_dir + "/image_features_" + str(folder_id) + ".hdf5", 'r') as img_data:
+        # with h5py.File(self.images_dir, 'r') as img_data:
             # i ovie treba da se smenat za baseline
-            # ids = img_data['image_id'][()]
-            # position_item = np.argwhere(ids == image_id)[0][0]
-            # return img_data['image_features'][position_item]
-            ids = img_data['img_id'][()]
+            ids = img_data['image_id'][()]
             position_item = np.argwhere(ids == image_id)[0][0]
-            return img_data['img_embed'][position_item]
+            return img_data['image_features'][position_item]
+            # ids = img_data['img_id'][()]
+            # position_item = np.argwhere(ids == image_id)[0][0]
+            # return img_data['img_embed'][position_item]
 
     def __len__(self):
         return self.pairs.shape[0]
