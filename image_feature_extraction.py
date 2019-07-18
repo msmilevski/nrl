@@ -35,10 +35,10 @@ class ImageDataset(Dataset):
         img_id = int(img_path.split("/")[-1].split(".")[0])
         image = cv2.imread(img_path)
 
-        if not(image is None):
-            image = image[:,:,:3]
-        else:
-            image = np.zeros((256, 256, 3),dtype=float)
+        # if not(image is None):
+        image = image[:,:,:3]
+        # else:
+        #     image = np.zeros((256, 256, 3),dtype=float)
 
         if self.transform:
             sample = self.transform(image)
@@ -104,7 +104,9 @@ print(args)
 
 data = h5py.File('dataset/fasttext_data.hdf5', 'r')
 image_ids = data['image_id'][()]
+del data
 u = np.unique(image_ids)
+del image_ids
 dict = {}
 for item in u:
     folder = item % 100
