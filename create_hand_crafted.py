@@ -21,8 +21,8 @@ torch.multiprocessing.set_sharing_strategy('file_system')
 type_of_dataset = sys.argv[1]
 which_part = sys.argv[2]
 dataset = DatasetProvider(pair_file_path='dataset/ItemPairs_' + type_of_dataset + '_processed.csv',
-                          data_file_path='dataset/fasttext_data.hdf5',
-                          images_dir='dataset/resnet152', start_id=int(which_part))
+                          data_file_path='/disk/scratch/s1885778/dataset/fasttext_data.hdf5',
+                          images_dir='/disk/scratch/s1885778/dataset/resnet152', start_id=int(which_part))
 
 print(len(dataset))
 dataloader = DataLoader(dataset, batch_size=100, shuffle=False, num_workers=0)
