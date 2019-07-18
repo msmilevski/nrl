@@ -2,6 +2,7 @@ import os
 from glob import glob
 import numpy as np
 import cv2
+import torch
 import torch.nn as nn
 import torchvision.models as models
 from torch.utils.data import Dataset, DataLoader
@@ -39,7 +40,7 @@ class ImageDataset(Dataset):
         if not(image is None):
             image = image[:,:,:3]
         else:
-            image = np.zeros((256,256,3))
+            image = torch.zeros((256,256,3))
             img_id = -1
 
         if self.transform:
