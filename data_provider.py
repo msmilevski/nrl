@@ -4,6 +4,8 @@ import pandas as pd
 import numpy as np
 # Ignore warinings
 import warnings
+import ast
+import pickle
 import preprocessing.preprocessing_util as util
 
 warnings.filterwarnings("ignore")
@@ -11,7 +13,7 @@ warnings.filterwarnings("ignore")
 
 class DatasetProvider(Dataset):
 
-    def __init__(self, pair_file_path, data_file_path, images_dir, transform=None):
+    def __init__(self, pair_file_path, data_file_path, images_dir, transform=None, start_id=-1):
         '''
         Class that creates the dataset online, using the ids from the pairs dataset
         :param pair_file_path: path to the Pairs dataset
@@ -21,6 +23,13 @@ class DatasetProvider(Dataset):
         '''
         # Read data
         self.pairs = pd.read_csv(pair_file_path, encoding='utf-8')
+        if start_id != -1:
+            start_index = start_id*207551
+            end_index = (start_id + 1)*207551
+            if end_index > len(self.pairs):
+                end_index = len(self.pairs) + 1
+            self.pairs = self.pairs[start_index : end_index]
+
         data = h5py.File(data_file_path, 'r')
         self.images_dir = images_dir
         self.transform = transform
@@ -30,11 +39,15 @@ class DatasetProvider(Dataset):
 
     def get_image_embedding(self, image_id):
         folder_id = image_id % 100
-        with h5py.File(self.images_dir + "/image_features_" + str(folder_id) + ".hdf5", 'r') as img_data:
-        #with h5py.File('dataset/subsampled_train_img_embed.hdf5', 'r') as img_data:
-            ids = img_data['image_id'][()]
+        #with h5py.File(self.images_dir + "/image_features_" + str(folder_id) + ".hdf5", 'r') as img_data:
+        with h5py.File(self.images_dir, 'r') as img_data:
+            # i ovie treba da se smenat za baseline
+            # ids = img_data['image_id'][()]
+            # position_item = np.argwhere(ids == image_id)[0][0]
+            # return img_data['image_features'][position_item]
+            ids = img_data['img_id'][()]
             position_item = np.argwhere(ids == image_id)[0][0]
-            return img_data['image_features'][position_item]
+            return img_data['img_embed'][position_item]
 
     def __len__(self):
         return self.pairs.shape[0]

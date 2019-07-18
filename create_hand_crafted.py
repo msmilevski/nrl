@@ -19,12 +19,13 @@ def euclidean_distance(x, y):
 # this here is so the threads don't get cancel on the Cluster
 torch.multiprocessing.set_sharing_strategy('file_system')
 type_of_dataset = sys.argv[1]
+which_part = sys.argv[2]
 dataset = DatasetProvider(pair_file_path='dataset/ItemPairs_' + type_of_dataset + '_processed.csv',
                           data_file_path='dataset/fasttext_data.hdf5',
-                          images_dir='dataset/resnet152')
+                          images_dir='dataset/resnet152', start_id=int(which_part))
 
 print(len(dataset))
-dataloader = DataLoader(dataset, batch_size=100, shuffle=True, num_workers=2)
+dataloader = DataLoader(dataset, batch_size=100, shuffle=False, num_workers=0)
 
 feature_1 = []
 feature_2 = []
@@ -47,4 +48,4 @@ data['feature_2'] = np.array(feature_2)
 data['y'] = np.array(y)
 
 df = pd.DataFrame(data=data)
-df.to_csv('dataset/Item_pairs_features_' + type_of_dataset + '.csv')
+df.to_csv('dataset/subsampleItem_pairs_features_' + type_of_dataset + '_' + which_part + '.csv')
