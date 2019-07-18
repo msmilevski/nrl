@@ -7,6 +7,7 @@ import torchvision.models as models
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
 import h5py
+import pickle
 
 # Ignore warinings
 import warnings
@@ -102,18 +103,8 @@ class RandomCrop(object):
 args, device = arg_extractor.get_args()
 print(args)
 
-data = h5py.File('dataset/fasttext_data.hdf5', 'r')
-image_ids = data['image_id'][()]
-u = np.unique(image_ids)
-dict = {}
-for item in u:
-    folder = item % 100
-    if folder in dict:
-        temp = dict[folder]
-        temp.append(item)
-        dict[folder] = temp
-    else:
-        dict[folder] = [item]
+dict = pickle.load(open('dataset/Image_embed_dict.pickle', 'rb'))
+arr = list(dict.keys())[args.seed*5 : (args.seed+1)*5]
 
 composed = transforms.Compose([Rescale(256),
                                RandomCrop(224),
@@ -125,10 +116,9 @@ alexnet = nn.Sequential(*list(alexnet.children())[:-1])
 alexnet = alexnet
 alexnet.to(device)
 
-
 general_path = "/home/s1885778/nrl/dataset/Images_/Images_"
 
-for item in dict.keys():
+for item in arr:
     image_paths = []
     image_ids = dict[item]
     for id in image_ids:
