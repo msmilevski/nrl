@@ -39,7 +39,7 @@ class ImageDataset(Dataset):
         if not(image is None):
             image = image[:,:,:3]
         else:
-            image = np.zeros((256, 256, 3),dtype=float)
+            return {'image': -1, 'image_id': -1}
 
         if self.transform:
             sample = self.transform(image)
@@ -150,8 +150,11 @@ for item in arr:
         print("Add batch to list...")
         batch_features = batch_features.detach().numpy().astype(float)
         for i, id in enumerate(sample_batched['image_id']):
-            ids.append(int(id))
-            features.append(batch_features[i, :])
+            if int(id) != -1:
+                ids.append(int(id))
+                features.append(batch_features[i, :])
+            else:
+                print(id)
 
     # Saving the data
     save_file_path = "/home/s1885778/nrl/dataset/alexnet/image_features_" + str(item) + ".hdf5"
