@@ -19,18 +19,13 @@ import arg_extractor
 class ImageDataset(Dataset):
     '''Images dataset'''
 
-    def __init__(self, root_dir, transform=None):
+    def __init__(self, image_paths, transform=None):
         '''
         :param root_dir: Root directory from which we will open the images
         :param transform: Optional transform to be applied on a image
         '''
-        self.root_dir = root_dir
         self.transform = transform
-        self.image_paths = self.get_all_image_paths()
-
-    def get_all_image_paths(self):
-        paths = [y for x in os.walk(self.root_dir) for y in glob(os.path.join(x[0], "*.jpg"))]
-        return paths
+        self.image_paths = image_paths
 
     def __len__(self):
         return len(self.image_paths)
@@ -107,50 +102,69 @@ class RandomCrop(object):
 args, device = arg_extractor.get_args()
 print(args)
 
-root_dir = args.dataset_name
-print(root_dir)
+data = h5py.File('dataset/fasttext_data.hdf5', 'r')
+image_ids = data['image_id'][()]
+u = np.unique(image_ids)
+dict = {}
+for item in u:
+    folder = item % 100
+    if folder in dict:
+        temp = dict[folder]
+        temp.append(item)
+        dict[folder] = temp
+    else:
+        dict[folder] = [item]
 
 composed = transforms.Compose([Rescale(256),
                                RandomCrop(224),
                                transforms.ToTensor(),
                                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
-image_dataset = ImageDataset(root_dir=root_dir, transform=composed)
-print(len(image_dataset))
-dataload = DataLoader(image_dataset, batch_size=args.batch_size, num_workers=0)
+
+general_path = "/home/s1885778/nrl/dataset/Images_/Images_"
 
 resnet152 = models.resnet152(pretrained=True)
 resnet152_extract = nn.Sequential(*list(resnet152.children())[:-1])
 resnet152 = resnet152_extract
 resnet152.to(device)
 
-features = []
-ids = []
+for item in dict.keys():
+    image_paths = []
+    image_ids = dict[item]
+    for id in image_ids:
+        temp = general_path + str(item) + "/" + str(id)
+        image_paths.append(temp)
 
-# batch size = 100
 
-for i_batch, sample_batched in enumerate(dataload):
-    # Get image features
-    print("Put images on device: " + str(device))
-    input = sample_batched['image'].to(device)
-    print("Put them through the pretrained network...")
-    batch_features = resnet152.forward(input)
-    # Reshape output from the last layer of the resnet
-    print("Return data on CPU")
-    batch_features = batch_features.cpu()
-    print(batch_features.shape)
-    batch_features = batch_features.reshape(batch_features.shape[0], batch_features.shape[1])
-    # Use detach to imply that I don't need gradients
-    # Turn tensor into numpy array
-    # Save each image feature with its corresponing img_id
-    print("Add batch to list...")
-    batch_features = batch_features.detach().numpy().astype(float)
-    for i, id in enumerate(sample_batched['image_id']):
-        ids.append(int(id))
-        features.append(batch_features[i, :])
+    image_dataset = ImageDataset(image_paths=image_paths, transform=composed)
+    print(len(image_dataset))
+    dataload = DataLoader(image_dataset, batch_size=args.batch_size, num_workers=0)
 
-# Saving the data
-save_file_path = "/home/s1885778/nrl/dataset/resnet152/image_features_" + root_dir.split('/')[-2] + ".hdf5"
-print("Saving file: " + save_file_path + " ...")
-data_file = h5py.File(save_file_path, 'w')
-data_file.create_dataset("image_id", data=ids)
-data_file.create_dataset("image_features", data=features)
+
+    features = []
+    ids = []
+    for i_batch, sample_batched in enumerate(dataload):
+        # Get image features
+        print("Put images on device: " + str(device))
+        input = sample_batched['image'].to(device)
+        print("Put them through the pretrained network...")
+        batch_features = resnet152.forward(input)
+        # Reshape output from the last layer of the resnet
+        print("Return data on CPU")
+        batch_features = batch_features.cpu()
+        print(batch_features.shape)
+        batch_features = batch_features.reshape(batch_features.shape[0], batch_features.shape[1])
+        # Use detach to imply that I don't need gradients
+        # Turn tensor into numpy array
+        # Save each image feature with its corresponing img_id
+        print("Add batch to list...")
+        batch_features = batch_features.detach().numpy().astype(float)
+        for i, id in enumerate(sample_batched['image_id']):
+            ids.append(int(id))
+            features.append(batch_features[i, :])
+
+    # Saving the data
+    save_file_path = "/home/s1885778/nrl/dataset/resnet152_1/image_features_" + str(item) + ".hdf5"
+    print("Saving file: " + save_file_path + " ...")
+    data_file = h5py.File(save_file_path, 'w')
+    data_file.create_dataset("image_id", data=ids)
+    data_file.create_dataset("image_features", data=features)

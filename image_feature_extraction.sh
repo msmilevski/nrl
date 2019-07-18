@@ -1,10 +1,10 @@
 #!/bin/sh
 #SBATCH -N 1	  # nodes requested
 #SBATCH -n 1	  # tasks requested
-#SBATCH --partition=Standard
-#SBATCH --gres=gpu:1
+#SBATCH --partition=LongJobs
+#SBATCH --gres=gpu:2
 #SBATCH --mem=12000  # memory in Mb
-#SBATCH --time=0-08:00:00
+#SBATCH --time=0-40:00:00
 
 
 export CUDA_HOME=/opt/cuda-9.0.176.1/
@@ -33,4 +33,4 @@ export DATASET_DIR=${TMP}/datasets/
 # Activate the relevant virtual environment:
 source /home/${STUDENT_ID}/miniconda3/bin/activate mlp
 
-python image_feature_extraction.py --batch_size 10 --dataset_name '/home/s1885778/nrl/dataset/Images_/Images_5/54/' --use_gpu 'True' --gpu_id '0'
+python image_feature_extraction.py --batch_size 10 --use_gpu 'True' --gpu_id '0,1'
