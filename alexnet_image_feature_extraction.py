@@ -39,7 +39,8 @@ class ImageDataset(Dataset):
         if not(image is None):
             image = image[:,:,:3]
         else:
-            return {'image': -1, 'image_id': -1}
+            image = np.zeros((256,256,3))
+            img_id = -1
 
         if self.transform:
             sample = self.transform(image)
