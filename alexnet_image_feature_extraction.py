@@ -123,7 +123,7 @@ general_path = "/home/s1885778/nrl/dataset/Images_/Images_"
 for item in arr:
     image_paths = []
     image_ids = dict[item]
-    folder = int(item) / 10
+    folder = int(int(item) / 10)
     for id in image_ids:
         temp = general_path + str(folder) + '/' + str(item) + "/" + str(id) + '.jpg'
         image_paths.append(temp)
