@@ -146,7 +146,6 @@ for item in arr:
         print("Return data on CPU")
         batch_features = batch_features.cpu()
         print(batch_features.shape)
-        batch_features = batch_features.reshape(batch_features.shape[0], batch_features.shape[1])
         # Use detach to imply that I don't need gradients
         # Turn tensor into numpy array
         # Save each image feature with its corresponing img_id
