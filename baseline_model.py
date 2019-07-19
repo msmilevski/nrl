@@ -4,9 +4,9 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import average_precision_score
 from plot_precision_recall_curve import plot_stats
 
-train_data = pd.read_csv('dataset/subsampleItem_pairs_features_train.csv')
-val_data = pd.read_csv('dataset/subsampleItem_pairs_features_val.csv')
-test_data = pd.read_csv('dataset/subsampleItem_pairs_features_test.csv')
+train_data = pd.read_csv('dataset/Item_pairs_features_train.csv')
+val_data = pd.read_csv('dataset/Item_pairs_features_val.csv')
+test_data = pd.read_csv('dataset/Item_pairs_features_test.csv')
 
 print("Dataset loaded.")
 
@@ -40,15 +40,15 @@ print("Training is finished.")
 
 y_pred = clf.predict(X)
 average_precision = average_precision_score(y_true=y, y_score=y_pred)
-print("Averege precision score train set: " + str(average_precision))
-plot_stats(y, y_pred, average_precision)
+print("Average precision score train set: " + str(average_precision))
+plot_stats(y, y_pred, average_precision, figure_name='baseline_train.pdf')
 
 y_pred = clf.predict(X_val)
 average_precision = average_precision_score(y_true=y_val, y_score=y_pred)
-print("Averege precision score val set: " + str(average_precision))
-plot_stats(y_val, y_pred, average_precision)
+print("Average precision score val set: " + str(average_precision))
+plot_stats(y_val, y_pred, average_precision, figure_name='baseline_val.pdf')
 
 y_pred = clf.predict(X_test)
 average_precision = average_precision_score(y_true=y_test, y_score=y_pred)
-print("Averege precision score test set: " + str(average_precision))
-plot_stats(y_test, y_pred, average_precision)
+print("Average precision score test set: " + str(average_precision))
+plot_stats(y_test, y_pred, average_precision, figure_name='baseline_test.pdf')
