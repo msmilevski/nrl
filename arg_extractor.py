@@ -4,6 +4,7 @@ import os
 import sys
 import GPUtil
 
+
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
         return True
@@ -22,6 +23,13 @@ def get_args():
         description='Welcome to the MLP course\'s Pytorch training and inference helper script')
 
     parser.add_argument('--batch_size', nargs="?", type=int, default=100, help='Batch_size for experiment')
+    parser.add_argument('--lstm_hidden_dim', nargs="?", type=int, default=512, help='Hidden_dim for LSTM')
+    parser.add_argument('--encoder_output_size', nargs="?", type=int, default=1024,
+                        help='Size of the output of the encoder')
+    parser.add_argument('--fc1_size', nargs="?", type=int, default=512,
+                        help='Size of the output of the first layer of the siamese network')
+    parser.add_argument('--fc2_size', nargs="?", type=int, default=2048,
+                        help='Size of the output of the second layer of the siamese network')
     parser.add_argument('--model_name', nargs="?", type=str, default="baseline", help='Model for the experiment')
     parser.add_argument('--continue_from_epoch', nargs="?", type=int, default=-1, help='Batch_size for experiment')
     parser.add_argument('--dataset_name', type=str, help='Dataset on which the system will train/eval our model')
@@ -55,8 +63,8 @@ def get_args():
     if args.use_gpu == True:
         num_requested_gpus = len(args.gpu_id.split(","))
         num_received_gpus = len(GPUtil.getAvailable(order='first', limit=8, maxLoad=0.1,
-                                             maxMemory=0.1, includeNan=False,
-                                             excludeID=[], excludeUUID=[]))
+                                                    maxMemory=0.1, includeNan=False,
+                                                    excludeID=[], excludeUUID=[]))
 
         if num_requested_gpus == 1 and num_received_gpus > 1:
             print("Detected Slurm problem with GPUs, attempting automated fix")
@@ -78,12 +86,12 @@ def get_args():
                                              excludeID=[], excludeUUID=[])
 
             if len(gpu_to_use) >= num_requested_gpus:
-                os.environ["CUDA_VISIBLE_DEVICES"] = ",".join(str(gpu_idx) for gpu_idx in gpu_to_use[:num_requested_gpus])
+                os.environ["CUDA_VISIBLE_DEVICES"] = ",".join(
+                    str(gpu_idx) for gpu_idx in gpu_to_use[:num_requested_gpus])
                 print("Using GPU with ID", gpu_to_use[:num_requested_gpus])
             else:
                 print("Not enough GPUs available, please try on another node now, or retry on this node later")
                 sys.exit()
-
 
     import torch
     args.use_cuda = torch.cuda.is_available()
@@ -104,7 +112,6 @@ class AttributeAccessibleDict(object):
 
 
 def extract_args_from_json(json_file_path, existing_args_dict=None):
-
     summary_filename = json_file_path
     with open(summary_filename) as f:
         arguments_dict = json.load(fp=f)
