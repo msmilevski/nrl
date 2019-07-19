@@ -5,13 +5,13 @@
   "continue_from_epoch": -2,
   "seed": 0,
   "num_epochs": 100,
-  "experiment_name": "standard_experiment",
+  "experiment_name": "standard_1_experiment",
   "use_gpu": true,
   "gpu_id": "0",
-  "lstm_hidden_dim": 512,
-  "encoder_output_size": 1024,
-  "fc1_size": 512,
-  "fc2_size": 2048,
+  "lstm_hidden_dim": 100,
+  "encoder_output_size": 256,
+  "fc1_size": 128,
+  "fc2_size": 100,
   "lr": 0.01,
   "weight_decay_coefficient": 1e-05
 }
