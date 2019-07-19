@@ -7,12 +7,13 @@ import os
 import numpy as np
 import time
 from sklearn.metrics import average_precision_score
+from models import ContrastiveLoss
 
 from storage_utils import save_statistics
 
 class ExperimentBuilder(nn.Module):
     def __init__(self, network_model, experiment_name, num_epochs, train_data, val_data,
-                 test_data, weight_decay_coefficient, device, continue_from_epoch=-1, isBaseline=False):
+                 test_data, weight_decay_coefficient, device, continue_from_epoch=-1):
         """
         Initializes an ExperimentBuilder object. Such an object takes care of running training and evaluation of a deep net
         on a given dataset. It also takes care of saving per epoch models and automatically inferring the best val model
@@ -53,7 +54,7 @@ class ExperimentBuilder(nn.Module):
         # Set best models to be at 0 since we are just starting
         self.best_val_model_idx = 0
         self.best_val_model_aps = 0.
-        self.isBaseline = isBaseline
+        self.no_improvement_counter = 0
 
         if not os.path.exists(self.experiment_folder):  # If experiment directory does not exist
             os.mkdir(self.experiment_folder)  # create the experiment directory
@@ -65,7 +66,7 @@ class ExperimentBuilder(nn.Module):
             os.mkdir(self.experiment_saved_models)  # create the experiment saved models directory
 
         self.num_epochs = num_epochs
-        self.criterion = nn.CrossEntropyLoss().to(self.device)  # send the loss computation to the GPU
+        self.criterion = nn.BCELoss().to(self.device)  # send the loss computation to the GPU
         if continue_from_epoch == -2:
             try:
                 self.best_val_model_idx, self.best_val_model_aps, self.state = self.load_model(
@@ -109,23 +110,25 @@ class ExperimentBuilder(nn.Module):
 
         #print(type(x))
 
-        # if type(x) is np.ndarray:
-        #     x, y = torch.Tensor(x).float().to(device=self.device), torch.Tensor(y).long().to(
-        #     device=self.device)  # send data to device as torch tensors
-        if not self.isBaseline:
-            x = x.to(self.device)
-            y = y.to(self.device)
+        if type(x) is np.ndarray:
+            x, y = torch.Tensor(x).float().to(device=self.device), torch.Tensor(y).long().to(
+            device=self.device)  # send data to device as torch tensors
 
-        out = self.model.forward(x)  # forward the data in the model
+        # x = x.to(self.device)
+        y = y.type(torch.float).to(self.device)
+
+        out = self.model.forward(x) # forward the data in the model
+        out = out.type(torch.float)
+        y = y.type(torch.float)
         loss = self.criterion(input=out, target=y)  # compute loss
 
         self.optimizer.zero_grad()  # set all weight grads from previous training iters to 0
         loss.backward()  # backpropagate to compute gradients for current iter loss
 
         self.optimizer.step()  # update network parameters
-        _, predicted = torch.max(out.data, 1) # get argmax of predictions
+        #_, predicted = torch.max(out.data, 1) # get argmax of predictions
         y_true = y.numpy()
-        predicted = predicted.numpy()
+        predicted = out.detach().numpy()
         average_precision = average_precision_score(y_true=y_true, y_score=predicted)
         #accuracy = np.mean(list(predicted.eq(y.data).cpu()))  # compute accuracy
         return loss.data.detach().cpu().numpy(), average_precision
@@ -144,15 +147,15 @@ class ExperimentBuilder(nn.Module):
             x, y = torch.Tensor(x).float().to(device=self.device), torch.Tensor(y).long().to(
             device=self.device)  # convert data to pytorch tensors and send to the computation device
 
-        if not self.isBaseline:
-            x = x.to(self.device)
-            y = y.to(self.device)
+        # x = x.to(self.device)
+        y = y.type(torch.float).to(self.device)
 
         out = self.model(x)  # forward the data in the model
+        out = out.type(torch.float)
         loss = self.criterion(out, y)  # compute loss
-        _, predicted = torch.max(out.data, 1)  # get argmax of predictions
+        #_, predicted = torch.max(out.data, 1)  # get argmax of predictions
+        predicted = out.detach().numpy()
         y_true = y.numpy()
-        predicted = predicted.numpy()
         average_precision = average_precision_score(y_true=y_true, y_score=predicted)
         #accuracy = np.mean(list(predicted.eq(y.data).cpu()))  # compute accuracy
         return loss.data.detach().cpu().numpy(), average_precision
@@ -197,29 +200,38 @@ class ExperimentBuilder(nn.Module):
 
             with tqdm.tqdm(total=len(self.train_data)) as pbar_train:  # create a progress bar for training
                 for idx, batch in enumerate(self.train_data):  # get data batches
-                    desc_1_batch = batch['desc1']
-                    desc_2_batch = batch['desc2']
-                    img_1_batch = batch['image_1']
-                    img_2_batch = batch['image_2']
+                    desc_1_batch = batch['desc1'].to(self.device)
+                    desc_2_batch = batch['desc2'].to(self.device)
+                    img_1_batch = batch['image_1'].to(self.device).type(torch.float)
+                    img_2_batch = batch['image_2'].to(self.device).type(torch.float)
                     y = batch['target']
                     x = [desc_1_batch, img_1_batch, desc_2_batch, img_2_batch]
-                    loss, accuracy = self.run_train_iter(x=x, y=y)  # take a training iter step
+                    loss, aps = self.run_train_iter(x=x, y=y)  # take a training iter step
                     current_epoch_losses["train_loss"].append(loss)  # add current iter loss to the train loss list
-                    current_epoch_losses["train_acc"].append(accuracy)  # add current iter acc to the train acc list
+                    current_epoch_losses["train_aps"].append(aps)  # add current iter acc to the train acc list
                     pbar_train.update(1)
-                    pbar_train.set_description("loss: {:.4f}, accuracy: {:.4f}".format(loss, accuracy))
+                    pbar_train.set_description("loss: {:.4f}, average precision score: {:.4f}".format(loss, aps))
 
             with tqdm.tqdm(total=len(self.val_data)) as pbar_val:  # create a progress bar for validation
-                for x, y in self.val_data:  # get data batches
-                    loss, accuracy = self.run_evaluation_iter(x=x, y=y)  # run a validation iter
+                for idx, batch in enumerate(self.val_data):  # get data batches
+                    desc_1_batch = batch['desc1'].to(self.device)
+                    desc_2_batch = batch['desc2'].to(self.device)
+                    img_1_batch = batch['image_1'].to(self.device).type(torch.float)
+                    img_2_batch = batch['image_2'].to(self.device).type(torch.float)
+                    y = batch['target']
+                    x = [desc_1_batch, img_1_batch, desc_2_batch, img_2_batch]
+                    loss, aps = self.run_evaluation_iter(x=x, y=y)  # run a validation iter
                     current_epoch_losses["val_loss"].append(loss)  # add current iter loss to val loss list.
-                    current_epoch_losses["val_acc"].append(accuracy)  # add current iter acc to val acc lst.
+                    current_epoch_losses["val_aps"].append(aps)  # add current iter acc to val acc lst.
                     pbar_val.update(1)  # add 1 step to the progress bar
-                    pbar_val.set_description("loss: {:.4f}, average precision score: {:.4f}".format(loss, accuracy))
-            val_mean_accuracy = np.mean(current_epoch_losses['val_aps'])
-            if val_mean_accuracy > self.best_val_model_aps:  # if current epoch's mean val acc is greater than the saved best val acc then
-                self.best_val_model_aps = val_mean_accuracy  # set the best val model acc to be current epoch's val accuracy
+                    pbar_val.set_description("loss: {:.4f}, average precision score: {:.4f}".format(loss, aps))
+            val_mean_aps = np.mean(current_epoch_losses['val_aps'])
+            if val_mean_aps > self.best_val_model_aps:  # if current epoch's mean val acc is greater than the saved best val acc then
+                self.best_val_model_aps = val_mean_aps  # set the best val model acc to be current epoch's val accuracy
                 self.best_val_model_idx = epoch_idx  # set the experiment-wise best val idx to be the current epoch's idx
+                self.no_improvement_counter = 0
+            else:
+                self.no_improvement_counter += 1
 
             for key, value in current_epoch_losses.items():
                 total_losses[key].append(np.mean(
@@ -248,20 +260,29 @@ class ExperimentBuilder(nn.Module):
                             # save model and best val idx and best val acc, using the model dir, model name and model idx
                             model_save_name="train_model", model_idx='latest', state=self.state)
 
+            # Early stopping
+            if self.no_improvement_counter == 20:
+                break
+
         print("Generating test set evaluation metrics")
         self.load_model(model_save_dir=self.experiment_saved_models, model_idx=self.best_val_model_idx,
                         # load best validation model
                         model_save_name="train_model")
-        current_epoch_losses = {"test_acc": [], "test_loss": []}  # initialize a statistics dict
+        current_epoch_losses = {"test_aps": [], "test_loss": []}  # initialize a statistics dict
         with tqdm.tqdm(total=len(self.test_data)) as pbar_test:  # ini a progress bar
-            for x, y in self.test_data:  # sample batch
-                loss, accuracy = self.run_evaluation_iter(x=x,
-                                                          y=y)  # compute loss and accuracy by running an evaluation step
+            for idx, batch in enumerate(self.test_data):  # sample batch
+                desc_1_batch = batch['desc1'].to(self.device)
+                desc_2_batch = batch['desc2'].to(self.device)
+                img_1_batch = batch['image_1'].to(self.device).type(torch.float)
+                img_2_batch = batch['image_2'].to(self.device).type(torch.float)
+                y = batch['target']
+                x = [desc_1_batch, img_1_batch, desc_2_batch, img_2_batch]
+                loss, aps = self.run_evaluation_iter(x=x, y=y)  # compute loss and accuracy by running an evaluation step
                 current_epoch_losses["test_loss"].append(loss)  # save test loss
-                current_epoch_losses["test_aps"].append(accuracy)  # save test accuracy
+                current_epoch_losses["test_aps"].append(aps)  # save test accuracy
                 pbar_test.update(1)  # update progress bar status
                 pbar_test.set_description(
-                    "loss: {:.4f}, average precision score: {:.4f}".format(loss, accuracy))  # update progress bar string output
+                    "loss: {:.4f}, average precision score: {:.4f}".format(loss, aps))  # update progress bar string output
 
         test_losses = {key: [np.mean(value)] for key, value in
                        current_epoch_losses.items()}  # save test set metrics in dict format
