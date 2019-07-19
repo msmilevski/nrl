@@ -61,6 +61,7 @@ siamese_model = SiameseNetwork(model_1, model_2, encoder_output_size=args.encode
 experiment = ExperimentBuilder(network_model=siamese_model,
                                     experiment_name=args.experiment_name,
                                     num_epochs=args.num_epochs,
+                                    learning_rate=args.lr,
                                     weight_decay_coefficient=args.weight_decay_coefficient,
                                     continue_from_epoch=args.continue_from_epoch,
                                     device=device,

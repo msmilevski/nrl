@@ -24,6 +24,7 @@ def get_args():
 
     parser.add_argument('--batch_size', nargs="?", type=int, default=100, help='Batch_size for experiment')
     parser.add_argument('--lstm_hidden_dim', nargs="?", type=int, default=512, help='Hidden_dim for LSTM')
+    parser.add_argument('--lr', nargs="?", type=float, default=0.01, help='Learning rate')
     parser.add_argument('--encoder_output_size', nargs="?", type=int, default=1024,
                         help='Size of the output of the encoder')
     parser.add_argument('--fc1_size', nargs="?", type=int, default=512,
