@@ -40,32 +40,32 @@ num_output_classes = 2
 embedding_matrix = np.load('dataset/fasttext_embed_10000.npy')
 if args.model_name == 'standard':
     model_1 = VQAStandard(desc_input_shape=(args.batch_size, 102),
-                        img_input_shape=(args.batch_size, 2048),
-                        num_output_classes=num_output_classes,
-                        use_bias=True,
-                        hidden_size=args.lstm_hidden_dim,
-                        encoder_output_size=args.encoder_output_size,
-                        embedding_matrix=embedding_matrix)
+                          img_input_shape=(args.batch_size, 2048),
+                          num_output_classes=num_output_classes,
+                          use_bias=True,
+                          hidden_size=args.lstm_hidden_dim,
+                          encoder_output_size=args.encoder_output_size,
+                          embedding_matrix=embedding_matrix)
 
     model_2 = VQAStandard(desc_input_shape=(args.batch_size, 102),
-                        img_input_shape=(args.batch_size, 2048),
-                        num_output_classes=num_output_classes,
-                        use_bias=True,
-                        hidden_size=args.lstm_hidden_dim,
-                        encoder_output_size=args.encoder_output_size,
-                        embedding_matrix=embedding_matrix)
+                          img_input_shape=(args.batch_size, 2048),
+                          num_output_classes=num_output_classes,
+                          use_bias=True,
+                          hidden_size=args.lstm_hidden_dim,
+                          encoder_output_size=args.encoder_output_size,
+                          embedding_matrix=embedding_matrix)
 
-
-siamese_model = SiameseNetwork(model_1, model_2, encoder_output_size=args.encoder_output_size, use_bias = True)
+siamese_model = SiameseNetwork(item_1_model=model_1, item_2_model=model_2, encoder_output_size=args.encoder_output_size,
+                               fc1_size=args.fc1_size, fc2_size=args.fc2_size, use_bias = True)
 
 experiment = ExperimentBuilder(network_model=siamese_model,
-                                    experiment_name=args.experiment_name,
-                                    num_epochs=args.num_epochs,
-                                    learning_rate=args.lr,
-                                    weight_decay_coefficient=args.weight_decay_coefficient,
-                                    continue_from_epoch=args.continue_from_epoch,
-                                    device=device,
-                                    train_data=training_data,
-                                    val_data=valid_data,
-                                    test_data=test_data)  # build an experiment object
+                               experiment_name=args.experiment_name,
+                               num_epochs=args.num_epochs,
+                               learning_rate=args.lr,
+                               weight_decay_coefficient=args.weight_decay_coefficient,
+                               continue_from_epoch=args.continue_from_epoch,
+                               device=device,
+                               train_data=training_data,
+                               val_data=valid_data,
+                               test_data=test_data)  # build an experiment object
 experiment_metrics, test_metrics = experiment.run_experiment()  # run experiment and return experiment metrics
