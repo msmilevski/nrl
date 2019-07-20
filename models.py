@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 
+
 class VQAStandard(nn.Module):
     def __init__(self, desc_input_shape, img_input_shape, num_output_classes, use_bias, hidden_size,
                  encoder_output_size, embedding_matrix):
@@ -32,7 +33,8 @@ class VQAStandard(nn.Module):
         self.layer_dict['second_lstm_cell'] = nn.LSTMCell(input_size=self.hidden_size, hidden_size=self.hidden_size,
                                                           bias=self.use_bias)
 
-        self.layer_dict['desc_fc'] = nn.Linear(in_features=4 * self.hidden_size, out_features=self.out_features, bias=self.use_bias)
+        self.layer_dict['desc_fc'] = nn.Linear(in_features=4 * self.hidden_size, out_features=self.out_features,
+                                               bias=self.use_bias)
         self.layer_dict['img_fc'] = nn.Linear(in_features=self.img_input_shape[1], out_features=self.out_features,
                                               bias=self.use_bias)
 
@@ -51,6 +53,12 @@ class VQAStandard(nn.Module):
         h_t2 = torch.from_numpy(np.random.randn(batch_size, self.hidden_size)).type(torch.float)
         c_t2 = torch.from_numpy(np.random.randn(batch_size, self.hidden_size)).type(torch.float)
 
+        if input.is_cuda:
+            h_t1 = h_t1.cuda()
+            c_t1 = c_t1.cuda()
+            h_t2 = h_t2.cuda()
+            c_t2 = c_t2.cuda()
+
         for i in range(out_desc.shape[0]):
             h_t1, c_t1 = self.layer_dict['first_lstm_cell'](out_desc[i], (h_t1, c_t1))
             h_t2, c_t2 = self.layer_dict['second_lstm_cell'](h_t1, (h_t2, c_t2))
@@ -64,6 +72,105 @@ class VQAStandard(nn.Module):
         out = out_desc * out_img
 
         return out
+
+    def reset_parameters(self):
+        for item in self.layer_dict.children():
+            item.reset_parameters()
+
+
+class StackedAttentionNetwork(nn.Module):
+    def __init__(self, desc_input_shape, img_input_shape, num_output_classes, use_bias, hidden_size,
+                 attention_kernel_size, num_att_layers, embedding_matrix):
+        super(StackedAttentionNetwork, self).__init__()
+        self.desc_input_shape = desc_input_shape
+        self.img_input_shape = img_input_shape
+        self.num_classes = num_output_classes
+        self.use_bias = use_bias
+        self.num_att_layers = num_att_layers
+        self.hidden_size = hidden_size
+        self.attention_kernel_size = attention_kernel_size
+        self.layer_dict = nn.ModuleDict()
+        self.embedding_layer = self.create_embedding_layer(embedding_matrix)
+        self.build_model()
+
+    def create_embedding_layer(self, embedding_matrix):
+        embedding_matrix = torch.from_numpy(embedding_matrix)
+        return nn.Embedding.from_pretrained(embeddings=embedding_matrix)
+
+    def build_model(self):
+        out_desc = torch.zeros(self.desc_input_shape, dtype=torch.long)
+
+        out_desc = self.embedding_layer(out_desc)
+        out_desc = out_desc.reshape(out_desc.shape[1], out_desc.shape[0], out_desc.shape[2]).type(torch.float)
+        self.layer_dict['lstm'] = nn.LSTM(input_size=out_desc.shape[-1], hidden_size=self.hidden_size)
+        h, c = self.layer_dict['lstm'](out_desc)
+
+        out_desc = h[-1]
+
+        out_img = torch.zeros(self.img_input_shape)
+        self.num_areas = out_img.shape[2] * out_img.shape[3]
+        out_img = out_img.reshape(out_img.shape[0], self.num_areas, out_img.shape[1])
+        self.layer_dict['fc_transform_img'] = nn.Linear(in_features=out_img.shape[2], out_features=self.hidden_size,
+                                                        bias=True)
+        out_img = self.layer_dict['fc_transform_img'](out_img)
+
+        u_k = out_desc
+        for i in range(self.num_att_layers):
+            self.layer_dict['fc_transform_img_{}'.format(i)] = nn.Linear(in_features=out_img.shape[-1],
+                                                                         out_features=self.attention_kernel_size,
+                                                                         bias=False)
+            temp_out_img = self.layer_dict['fc_transform_img_{}'.format(i)](out_img)
+            self.layer_dict['fc_transform_query_{}'.format(i)] = nn.Linear(in_features=u_k.shape[-1],
+                                                                         out_features=self.attention_kernel_size,
+                                                                         bias=True)
+            temp_u = self.layer_dict['fc_transform_query_{}'.format(i)](u_k)
+            temp_u = temp_u.unsqueeze(1)
+            h_a = temp_out_img + temp_u
+            h_a = torch.tanh(h_a)
+            self.layer_dict['fc_prob_{}'.format(i)] = nn.Linear(in_features=self.attention_kernel_size,
+                                                                out_features=1,
+                                                                bias=True)
+            p_i = self.layer_dict['fc_prob_{}'.format(i)](h_a)
+            p_i = p_i
+            p_i = F.softmax(p_i, dim=1)
+
+            temp_out_img = out_img.reshape(out_img.shape[0], out_img.shape[2], out_img.shape[1])
+            v_lambda = torch.bmm(temp_out_img, p_i)
+            v_lambda = v_lambda.squeeze()
+            u_k = v_lambda + u_k
+
+
+
+    def forward(self, input):
+        out_desc = input[0]
+        out_img = input[1]
+        self.num_areas = out_img.shape[2] * out_img.shape[3]
+
+        out_desc = self.embedding_layer(out_desc)
+        out_desc = out_desc.reshape(out_desc.shape[1], out_desc.shape[0], out_desc.shape[2]).type(torch.float)
+        h, c = self.layer_dict['lstm'](out_desc)
+        out_desc = h[-1]
+
+        out_img = out_img.reshape(out_img.shape[0], self.num_areas, out_img.shape[1])
+        out_img = self.layer_dict['fc_transform_img'](out_img)
+
+        u_k = out_desc
+        for i in range(self.num_att_layers):
+            temp_out_img = self.layer_dict['fc_transform_img_{}'.format(i)](out_img)
+            temp_u = self.layer_dict['fc_transform_query_{}'.format(i)](u_k)
+            temp_u = temp_u.unsqueeze(1)
+            h_a = temp_out_img + temp_u
+            h_a = torch.tanh(h_a)
+            p_i = self.layer_dict['fc_prob_{}'.format(i)](h_a)
+            p_i = p_i
+            p_i = F.softmax(p_i, dim=1)
+
+            temp_out_img = out_img.reshape(out_img.shape[0], out_img.shape[2], out_img.shape[1])
+            v_lambda = torch.bmm(temp_out_img, p_i)
+            v_lambda = v_lambda.squeeze()
+            u_k = v_lambda + u_k
+
+        return u_k
 
     def reset_parameters(self):
         for item in self.layer_dict.children():
