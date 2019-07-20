@@ -37,10 +37,10 @@ class ImageDataset(Dataset):
         img_id = int(img_path.split("/")[-1].split(".")[0])
         image = cv2.imread(img_path)
 
-        if not(image is None):
-            image = image[:,:,:3]
+        if not (image is None):
+            image = image[:, :, :3]
         else:
-            image = np.zeros((256,256,3),dtype=np.double)
+            image = np.zeros((256, 256, 3), dtype=np.double)
             img_id = -1
 
         if self.transform:
@@ -106,7 +106,9 @@ args, device = arg_extractor.get_args()
 print(args)
 
 dict = pickle.load(open('dataset/Image_embed_dict.pickle', 'rb'))
-arr = list(dict.keys())[args.seed*5 : (args.seed+1)*5]
+arr = [2, 3, 6, 7, 12, 13, 14, 16, 17, 19, 20, 24, 25, 26, 27, 28, 30, 34, 35, 38, 39, 41, 42, 45, 49, 51, 52, 53, 54,
+       55, 56, 58, 59, 60, 62, 64, 68, 71, 74, 75, 76, 77, 80, 84, 87, 88, 89, 91, 92, 93, 99]
+arr = arr[args.seed * 5: (args.seed + 1) * 5]
 
 composed = transforms.Compose([Rescale(256),
                                RandomCrop(224),
@@ -128,18 +130,16 @@ for item in arr:
         temp = general_path + str(folder) + '/' + str(item) + "/" + str(id) + '.jpg'
         image_paths.append(temp)
 
-
     image_dataset = ImageDataset(image_paths=image_paths, transform=composed)
     print(len(image_dataset))
     dataload = DataLoader(image_dataset, batch_size=args.batch_size, num_workers=0)
-
 
     features = []
     ids = []
     for i_batch, sample_batched in enumerate(dataload):
         # Get image features
         print("Put images on device: " + str(device))
-        input = sample_batched['image'].    to(device)
+        input = sample_batched['image'].to(device)
         print("Put them through the pretrained network...")
         batch_features = alexnet.forward(input)
         # Reshape output from the last layer of the resnet
