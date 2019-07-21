@@ -127,8 +127,8 @@ class ExperimentBuilder(nn.Module):
 
         self.optimizer.step()  # update network parameters
         # _, predicted = torch.max(out.data, 1) # get argmax of predictions
-        y_true = y.numpy()
-        predicted = out.detach().numpy()
+        y_true = y.cpu().numpy()
+        predicted = out.detach().cpu().numpy()
         average_precision = average_precision_score(y_true=y_true, y_score=predicted)
         # accuracy = np.mean(list(predicted.eq(y.data).cpu()))  # compute accuracy
         return loss.data.detach().cpu().numpy(), average_precision
@@ -154,8 +154,8 @@ class ExperimentBuilder(nn.Module):
         out = out.type(torch.float)
         loss = self.criterion(out, y)  # compute loss
         # _, predicted = torch.max(out.data, 1)  # get argmax of predictions
-        predicted = out.detach().numpy()
-        y_true = y.numpy()
+        predicted = out.detach().cpu().numpy()
+        y_true = y.cpu().numpy()
         average_precision = average_precision_score(y_true=y_true, y_score=predicted)
         # accuracy = np.mean(list(predicted.eq(y.data).cpu()))  # compute accuracy
         return loss.data.detach().cpu().numpy(), average_precision
