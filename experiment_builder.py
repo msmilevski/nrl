@@ -10,6 +10,7 @@ from sklearn.metrics import average_precision_score
 
 from storage_utils import save_statistics
 
+
 class ExperimentBuilder(nn.Module):
     def __init__(self, network_model, experiment_name, num_epochs, train_data, val_data,
                  test_data, learning_rate, weight_decay_coefficient, device, continue_from_epoch=-1):
@@ -39,14 +40,14 @@ class ExperimentBuilder(nn.Module):
             self.model = nn.DataParallel(module=self.model)
         else:
             self.model.to(self.device)  # sends the model from the cpu to the gpu
-          # re-initialize network parameters
+        # re-initialize network parameters
         self.train_data = train_data
         self.val_data = val_data
         self.test_data = test_data
         self.optimizer = optim.Adam(self.parameters(), amsgrad=False, lr=learning_rate,
                                     weight_decay=weight_decay_coefficient)
         # Generate the directory names
-        self.experiment_folder = os.path.abspath('experiments/'+experiment_name)
+        self.experiment_folder = os.path.abspath('experiments/' + experiment_name)
         self.experiment_logs = os.path.abspath(os.path.join(self.experiment_folder, "result_outputs"))
         self.experiment_saved_models = os.path.abspath(os.path.join(self.experiment_folder, "saved_models"))
         print(self.experiment_folder, self.experiment_logs)
@@ -107,16 +108,16 @@ class ExperimentBuilder(nn.Module):
         if len(y.shape) > 1:
             y = np.argmax(y, axis=1)  # convert one hot encoded labels to single integer labels
 
-        #print(type(x))
+        # print(type(x))
 
         if type(x) is np.ndarray:
             x, y = torch.Tensor(x).float().to(device=self.device), torch.Tensor(y).long().to(
-            device=self.device)  # send data to device as torch tensors
+                device=self.device)  # send data to device as torch tensors
 
         # x = x.to(self.device)
         y = y.type(torch.float).to(self.device)
 
-        out = self.model.forward(x) # forward the data in the model
+        out = self.model.forward(x)  # forward the data in the model
         out = out.type(torch.float)
         y = y.type(torch.float)
         loss = self.criterion(input=out, target=y)  # compute loss
@@ -125,11 +126,11 @@ class ExperimentBuilder(nn.Module):
         loss.backward()  # backpropagate to compute gradients for current iter loss
 
         self.optimizer.step()  # update network parameters
-        #_, predicted = torch.max(out.data, 1) # get argmax of predictions
+        # _, predicted = torch.max(out.data, 1) # get argmax of predictions
         y_true = y.numpy()
         predicted = out.detach().numpy()
         average_precision = average_precision_score(y_true=y_true, y_score=predicted)
-        #accuracy = np.mean(list(predicted.eq(y.data).cpu()))  # compute accuracy
+        # accuracy = np.mean(list(predicted.eq(y.data).cpu()))  # compute accuracy
         return loss.data.detach().cpu().numpy(), average_precision
 
     def run_evaluation_iter(self, x, y):
@@ -144,7 +145,7 @@ class ExperimentBuilder(nn.Module):
             y = np.argmax(y, axis=1)  # convert one hot encoded labels to single integer labels
         if type(x) is np.ndarray:
             x, y = torch.Tensor(x).float().to(device=self.device), torch.Tensor(y).long().to(
-            device=self.device)  # convert data to pytorch tensors and send to the computation device
+                device=self.device)  # convert data to pytorch tensors and send to the computation device
 
         # x = x.to(self.device)
         y = y.type(torch.float).to(self.device)
@@ -152,11 +153,11 @@ class ExperimentBuilder(nn.Module):
         out = self.model(x)  # forward the data in the model
         out = out.type(torch.float)
         loss = self.criterion(out, y)  # compute loss
-        #_, predicted = torch.max(out.data, 1)  # get argmax of predictions
+        # _, predicted = torch.max(out.data, 1)  # get argmax of predictions
         predicted = out.detach().numpy()
         y_true = y.numpy()
         average_precision = average_precision_score(y_true=y_true, y_score=predicted)
-        #accuracy = np.mean(list(predicted.eq(y.data).cpu()))  # compute accuracy
+        # accuracy = np.mean(list(predicted.eq(y.data).cpu()))  # compute accuracy
         return loss.data.detach().cpu().numpy(), average_precision
 
     def save_model(self, model_save_dir, model_save_name, model_idx, state):
@@ -239,8 +240,27 @@ class ExperimentBuilder(nn.Module):
             total_losses['curr_epoch'].append(epoch_idx)
             save_statistics(experiment_log_dir=self.experiment_logs, filename='summary.csv',
                             stats_dict=total_losses, current_epoch=i,
-                            continue_from_mode=True if (self.starting_epoch != 0 or i > 0) else False) # save statistics to stats file.
+                            continue_from_mode=True if (
+                                        self.starting_epoch != 0 or i > 0) else False)  # save statistics to stats file.
 
+            train_batch_losses = {"train_aps": [], "train_loss": [], "curr_epoch": []}
+            val_batch_losses = {"val_aps": [], "val_loss": [], "curr_epoch": []}
+
+            # train_batch_losses["train_loss"] = current_epoch_losses["train_loss"]
+            # train_batch_losses["train_aps"] = current_epoch_losses["train_aps"]
+            # train_batch_losses['curr_epoch'].append(epoch_idx)
+            #
+            # val_batch_losses["val_loss"] = current_epoch_losses["val_loss"]
+            # val_batch_losses["val_aps"] = current_epoch_losses["val_aps"]
+            # val_batch_losses['curr_epoch'].append(epoch_idx)
+
+            # save_statistics(experiment_log_dir=self.experiment_logs, filename='train_summary.csv',
+            #                 stats_dict=train_batch_losses, current_epoch=i,
+            #                 continue_from_mode=True if (self.starting_epoch != 0 or i > 0) else False)
+            #
+            # save_statistics(experiment_log_dir=self.experiment_logs, filename='val_summary.csv',
+            #                 stats_dict=val_batch_losses, current_epoch=i,
+            #                 continue_from_mode=True if (self.starting_epoch != 0 or i > 0) else False)
             # load_statistics(experiment_log_dir=self.experiment_logs, filename='summary.csv') # How to load a csv file if you need to
 
             out_string = "_".join(
@@ -276,12 +296,14 @@ class ExperimentBuilder(nn.Module):
                 img_2_batch = batch['image_2'].to(self.device).type(torch.float)
                 y = batch['target']
                 x = [desc_1_batch, img_1_batch, desc_2_batch, img_2_batch]
-                loss, aps = self.run_evaluation_iter(x=x, y=y)  # compute loss and accuracy by running an evaluation step
+                loss, aps = self.run_evaluation_iter(x=x,
+                                                     y=y)  # compute loss and accuracy by running an evaluation step
                 current_epoch_losses["test_loss"].append(loss)  # save test loss
                 current_epoch_losses["test_aps"].append(aps)  # save test accuracy
                 pbar_test.update(1)  # update progress bar status
                 pbar_test.set_description(
-                    "loss: {:.4f}, average precision score: {:.4f}".format(loss, aps))  # update progress bar string output
+                    "loss: {:.4f}, average precision score: {:.4f}".format(loss,
+                                                                           aps))  # update progress bar string output
 
         test_losses = {key: [np.mean(value)] for key, value in
                        current_epoch_losses.items()}  # save test set metrics in dict format

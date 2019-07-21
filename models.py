@@ -53,7 +53,7 @@ class VQAStandard(nn.Module):
         h_t2 = torch.from_numpy(np.random.randn(batch_size, self.hidden_size)).type(torch.float)
         c_t2 = torch.from_numpy(np.random.randn(batch_size, self.hidden_size)).type(torch.float)
 
-        if input.is_cuda:
+        if input[0].is_cuda:
             h_t1 = h_t1.cuda()
             c_t1 = c_t1.cuda()
             h_t2 = h_t2.cuda()
