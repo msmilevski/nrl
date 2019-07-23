@@ -243,24 +243,23 @@ class ExperimentBuilder(nn.Module):
                             continue_from_mode=True if (
                                         self.starting_epoch != 0 or i > 0) else False)  # save statistics to stats file.
 
-            train_batch_losses = {"train_aps": [], "train_loss": [], "curr_epoch": []}
-            val_batch_losses = {"val_aps": [], "val_loss": [], "curr_epoch": []}
+            train_batch_losses = {"train_aps": [], "train_loss": []}
+            val_batch_losses = {"val_aps": [], "val_loss": []}
 
-            # train_batch_losses["train_loss"] = current_epoch_losses["train_loss"]
-            # train_batch_losses["train_aps"] = current_epoch_losses["train_aps"]
-            # train_batch_losses['curr_epoch'].append(epoch_idx)
-            #
-            # val_batch_losses["val_loss"] = current_epoch_losses["val_loss"]
-            # val_batch_losses["val_aps"] = current_epoch_losses["val_aps"]
-            # val_batch_losses['curr_epoch'].append(epoch_idx)
+            train_batch_losses["train_loss"] = current_epoch_losses["train_loss"]
+            train_batch_losses["train_aps"] = current_epoch_losses["train_aps"]
 
-            # save_statistics(experiment_log_dir=self.experiment_logs, filename='train_summary.csv',
-            #                 stats_dict=train_batch_losses, current_epoch=i,
-            #                 continue_from_mode=True if (self.starting_epoch != 0 or i > 0) else False)
-            #
-            # save_statistics(experiment_log_dir=self.experiment_logs, filename='val_summary.csv',
-            #                 stats_dict=val_batch_losses, current_epoch=i,
-            #                 continue_from_mode=True if (self.starting_epoch != 0 or i > 0) else False)
+            val_batch_losses["val_loss"] = current_epoch_losses["val_loss"]
+            val_batch_losses["val_aps"] = current_epoch_losses["val_aps"]
+
+
+            save_statistics(experiment_log_dir=self.experiment_logs, filename='train_summary.csv',
+                            stats_dict=train_batch_losses, current_epoch=i, save_full_dict=True,
+                            continue_from_mode=True if (self.starting_epoch != 0 or i > 0) else False)
+
+            save_statistics(experiment_log_dir=self.experiment_logs, filename='val_summary.csv',
+                            stats_dict=val_batch_losses, current_epoch=i, save_full_dict=True,
+                            continue_from_mode=True if (self.starting_epoch != 0 or i > 0) else False)
             # load_statistics(experiment_log_dir=self.experiment_logs, filename='summary.csv') # How to load a csv file if you need to
 
             out_string = "_".join(
