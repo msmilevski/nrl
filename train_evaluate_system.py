@@ -26,17 +26,17 @@ elif args.dataset_name == 'san':
 training_data = DatasetProvider(pair_file_path='dataset/ItemPairs_train_processed.csv',
                                 data_file_path='/disk/scratch/s1885778/dataset/fasttext_data.hdf5',
                                 images_dir=image_dir)
-training_data = DataLoader(training_data, batch_size=args.batch_size, shuffle=True, num_workers=0)
+training_data = DataLoader(training_data, batch_size=args.batch_size, shuffle=True, num_workers=2)
 print('Training set loaded.')
 valid_data = DatasetProvider(pair_file_path='dataset/ItemPairs_val_processed.csv',
                              data_file_path='/disk/scratch/s1885778/dataset/fasttext_data.hdf5',
                              images_dir=image_dir)
-valid_data = DataLoader(valid_data, batch_size=args.batch_size, shuffle=True, num_workers=0)
+valid_data = DataLoader(valid_data, batch_size=args.batch_size, shuffle=True, num_workers=2)
 print('Validation set loaded.')
 test_data = DatasetProvider(pair_file_path='dataset/ItemPairs_test_processed.csv',
                             data_file_path='/disk/scratch/s1885778/dataset/fasttext_data.hdf5',
                             images_dir=image_dir)
-test_data = DataLoader(test_data, batch_size=args.batch_size, shuffle=True, num_workers=0)
+test_data = DataLoader(test_data, batch_size=args.batch_size, shuffle=True, num_workers=2)
 print('Test set loaded.')
 
 # Binary classification
