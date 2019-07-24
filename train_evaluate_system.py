@@ -48,6 +48,7 @@ if args.model_name == 'standard':
                           num_output_classes=num_output_classes,
                           use_bias=True,
                           hidden_size=args.lstm_hidden_dim,
+                          num_lstms=args.num_layers,
                           encoder_output_size=args.encoder_output_size,
                           embedding_matrix=embedding_matrix)
 
@@ -56,6 +57,7 @@ if args.model_name == 'standard':
                           num_output_classes=num_output_classes,
                           use_bias=True,
                           hidden_size=args.lstm_hidden_dim,
+                          num_lstms=args.num_layers,
                           encoder_output_size=args.encoder_output_size,
                           embedding_matrix=embedding_matrix)
 elif args.model_name == 'san':
