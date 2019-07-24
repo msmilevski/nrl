@@ -14,6 +14,13 @@ class VQAStandard(nn.Module):
         self.use_bias = use_bias
         self.hidden_size = hidden_size
         self.out_features = encoder_output_size
+        # Define random initialization for both lstm cells
+        batch_size = desc_input_shape[0]
+        self.h_t1 = torch.from_numpy(np.random.randn(batch_size, self.hidden_size)).type(torch.float)
+        self.c_t1 = torch.from_numpy(np.random.randn(batch_size, self.hidden_size)).type(torch.float)
+        self.h_t2 = torch.from_numpy(np.random.randn(batch_size, self.hidden_size)).type(torch.float)
+        self.c_t2 = torch.from_numpy(np.random.randn(batch_size, self.hidden_size)).type(torch.float)
+
         self.layer_dict = nn.ModuleDict()
         self.embedding_layer = self.create_embedding_layer(embedding_matrix)
         self.build_model()
@@ -32,9 +39,12 @@ class VQAStandard(nn.Module):
                                                          bias=self.use_bias)
         self.layer_dict['second_lstm_cell'] = nn.LSTMCell(input_size=self.hidden_size, hidden_size=self.hidden_size,
                                                           bias=self.use_bias)
+        # self.layer_dict['lstm'] = nn.LSTM(input_size=out_desc.shape[-1], hidden_size=self.hidden_size)
 
         self.layer_dict['desc_fc'] = nn.Linear(in_features=4 * self.hidden_size, out_features=self.out_features,
-                                               bias=self.use_bias)
+                                              bias=self.use_bias)
+        # self.layer_dict['desc_fc'] = nn.Linear(in_features=2 * self.hidden_size, out_features=self.out_features,
+        #                                        bias=self.use_bias)
         self.layer_dict['img_fc'] = nn.Linear(in_features=self.img_input_shape[1], out_features=self.out_features,
                                               bias=self.use_bias)
 
@@ -47,24 +57,19 @@ class VQAStandard(nn.Module):
         # Transform input from (batch_size, seq_length, embedding_size) to (seq_length, batch_size, embedding_size)
         out_desc = out_desc.reshape(out_desc.shape[1], out_desc.shape[0], out_desc.shape[2]).type(torch.float)
 
-        # Define random initialization for both lstm cells
-        h_t1 = torch.from_numpy(np.random.randn(batch_size, self.hidden_size)).type(torch.float)
-        c_t1 = torch.from_numpy(np.random.randn(batch_size, self.hidden_size)).type(torch.float)
-        h_t2 = torch.from_numpy(np.random.randn(batch_size, self.hidden_size)).type(torch.float)
-        c_t2 = torch.from_numpy(np.random.randn(batch_size, self.hidden_size)).type(torch.float)
 
         if input[0].is_cuda:
-            h_t1 = h_t1.cuda()
-            c_t1 = c_t1.cuda()
-            h_t2 = h_t2.cuda()
-            c_t2 = c_t2.cuda()
+            self.h_t1 = self.h_t1.cuda()
+            self.c_t1 = self.c_t1.cuda()
+            self.h_t2 = self.h_t2.cuda()
+            self.c_t2 = self.c_t2.cuda()
 
         for i in range(out_desc.shape[0]):
-            h_t1, c_t1 = self.layer_dict['first_lstm_cell'](out_desc[i], (h_t1, c_t1))
-            h_t2, c_t2 = self.layer_dict['second_lstm_cell'](h_t1, (h_t2, c_t2))
+            self.h_t1, self.c_t1 = self.layer_dict['first_lstm_cell'](out_desc[i], (self.h_t1, self.c_t1))
+            self.h_t2, c_t2 = self.layer_dict['second_lstm_cell'](self.h_t1, (self.h_t2, self.c_t2))
 
         # Not sure about the ordering here
-        out_desc = torch.cat((h_t1, c_t1, h_t2, c_t2), dim=1)
+        out_desc = torch.cat((self.h_t1, self.c_t1, self.h_t2, self.c_t2), dim=1)
 
         out_desc = self.layer_dict['desc_fc'](out_desc)
         out_img = self.layer_dict['img_fc'](img_embed)
