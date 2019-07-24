@@ -5,7 +5,7 @@ from torch.nn import functional as F
 
 
 class VQAStandard(nn.Module):
-    def __init__(self, desc_input_shape, img_input_shape, num_output_classes, use_bias, hidden_size,
+    def __init__(self, desc_input_shape, img_input_shape, num_output_classes, use_bias, hidden_size, num_lstms,
                  encoder_output_size, embedding_matrix):
         super(VQAStandard, self).__init__()
         self.desc_input_shape = desc_input_shape
@@ -14,13 +14,7 @@ class VQAStandard(nn.Module):
         self.use_bias = use_bias
         self.hidden_size = hidden_size
         self.out_features = encoder_output_size
-        # Define random initialization for both lstm cells
-        batch_size = desc_input_shape[0]
-        self.h_t1 = torch.from_numpy(np.random.randn(batch_size, self.hidden_size)).type(torch.float)
-        self.c_t1 = torch.from_numpy(np.random.randn(batch_size, self.hidden_size)).type(torch.float)
-        self.h_t2 = torch.from_numpy(np.random.randn(batch_size, self.hidden_size)).type(torch.float)
-        self.c_t2 = torch.from_numpy(np.random.randn(batch_size, self.hidden_size)).type(torch.float)
-
+        self.num_lstms = num_lstms
         self.layer_dict = nn.ModuleDict()
         self.embedding_layer = self.create_embedding_layer(embedding_matrix)
         self.build_model()
@@ -35,16 +29,12 @@ class VQAStandard(nn.Module):
 
         # Define Layers
         out_desc = self.embedding_layer(out_desc)
-        self.layer_dict['first_lstm_cell'] = nn.LSTMCell(input_size=out_desc.shape[2], hidden_size=self.hidden_size,
-                                                         bias=self.use_bias)
-        self.layer_dict['second_lstm_cell'] = nn.LSTMCell(input_size=self.hidden_size, hidden_size=self.hidden_size,
-                                                          bias=self.use_bias)
-        # self.layer_dict['lstm'] = nn.LSTM(input_size=out_desc.shape[-1], hidden_size=self.hidden_size)
+        self.layer_dict['lstm'] = nn.LSTM(input_size=out_desc.shape[-1], hidden_size=self.hidden_size,
+                                          num_layers=self.num_lstms)
 
-        self.layer_dict['desc_fc'] = nn.Linear(in_features=4 * self.hidden_size, out_features=self.out_features,
-                                              bias=self.use_bias)
-        # self.layer_dict['desc_fc'] = nn.Linear(in_features=2 * self.hidden_size, out_features=self.out_features,
-        #                                        bias=self.use_bias)
+        self.layer_dict['desc_fc'] = nn.Linear(in_features=2 * self.num_lstms * self.hidden_size,
+                                               out_features=self.out_features,
+                                               bias=self.use_bias)
         self.layer_dict['img_fc'] = nn.Linear(in_features=self.img_input_shape[1], out_features=self.out_features,
                                               bias=self.use_bias)
 
@@ -56,21 +46,9 @@ class VQAStandard(nn.Module):
         out_desc = self.embedding_layer(desc)
         # Transform input from (batch_size, seq_length, embedding_size) to (seq_length, batch_size, embedding_size)
         out_desc = out_desc.reshape(out_desc.shape[1], out_desc.shape[0], out_desc.shape[2]).type(torch.float)
-
-
-        if input[0].is_cuda:
-            self.h_t1 = self.h_t1.cuda()
-            self.c_t1 = self.c_t1.cuda()
-            self.h_t2 = self.h_t2.cuda()
-            self.c_t2 = self.c_t2.cuda()
-
-        for i in range(out_desc.shape[0]):
-            self.h_t1, self.c_t1 = self.layer_dict['first_lstm_cell'](out_desc[i], (self.h_t1, self.c_t1))
-            self.h_t2, c_t2 = self.layer_dict['second_lstm_cell'](self.h_t1, (self.h_t2, self.c_t2))
-
-        # Not sure about the ordering here
-        out_desc = torch.cat((self.h_t1, self.c_t1, self.h_t2, self.c_t2), dim=1)
-
+        out, (h, c) = self.layer_dict['lstm'](out_desc)
+        out_desc = torch.cat((h, c), dim=2)
+        out_desc = out_desc.reshape((out_desc.shape[1], out_desc.shape[0] * out_desc.shape[2]))
         out_desc = self.layer_dict['desc_fc'](out_desc)
         out_img = self.layer_dict['img_fc'](img_embed)
         # Point-wise multiplication
@@ -126,8 +104,8 @@ class StackedAttentionNetwork(nn.Module):
                                                                          bias=False)
             temp_out_img = self.layer_dict['fc_transform_img_{}'.format(i)](out_img)
             self.layer_dict['fc_transform_query_{}'.format(i)] = nn.Linear(in_features=u_k.shape[-1],
-                                                                         out_features=self.attention_kernel_size,
-                                                                         bias=True)
+                                                                           out_features=self.attention_kernel_size,
+                                                                           bias=True)
             temp_u = self.layer_dict['fc_transform_query_{}'.format(i)](u_k)
             temp_u = temp_u.unsqueeze(1)
             h_a = temp_out_img + temp_u
@@ -143,8 +121,6 @@ class StackedAttentionNetwork(nn.Module):
             v_lambda = torch.bmm(temp_out_img, p_i)
             v_lambda = v_lambda.squeeze()
             u_k = v_lambda + u_k
-
-
 
     def forward(self, input):
         out_desc = input[0]
@@ -195,6 +171,7 @@ class SiameseNetwork(nn.Module):
         self.build_model()
 
     def build_model(self):
+        # Define the fully connencted layers
         self.layer_dict['fcn1'] = nn.Linear(in_features=self.in_features, out_features=self.fc1_size, bias=self.bias)
         self.layer_dict['fcn2'] = nn.Linear(in_features=self.fc1_size, out_features=self.fc2_size, bias=self.bias)
         self.layer_dict['fcn3'] = nn.Linear(in_features=self.fc2_size, out_features=1, bias=self.bias)
@@ -235,4 +212,3 @@ class SiameseNetwork(nn.Module):
         self.item_2_model.reset_parameters()
         for item in self.layer_dict.children():
             item.reset_parameters()
-
