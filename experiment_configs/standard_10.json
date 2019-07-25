@@ -7,6 +7,7 @@
   "num_epochs": 100,
   "experiment_name": "standard_10_experiment",
   "use_gpu": "True",
+  "gpu_id":"0",
   "num_layers": 2,
   "lstm_hidden_dim": 512,
   "encoder_output_size": 1024,
