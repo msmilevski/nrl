@@ -106,19 +106,18 @@ args, device = arg_extractor.get_args()
 print(args)
 
 dict = pickle.load(open('dataset/Image_embed_dict.pickle', 'rb'))
-arr = [0, 2, 3, 6, 7, 12, 13, 14, 16, 17, 19, 20, 24, 25, 26, 27, 28, 35, 38, 41, 42, 45, 49, 54,
-       55, 60, 62, 74, 75, 84, 87, 92, 93]
-arr = arr[args.seed * 3: (args.seed + 1) * 3]
+arr = dict.keys()
+arr = arr[args.seed * 2: (args.seed + 1) * 2]
 
 composed = transforms.Compose([Rescale(256),
                                RandomCrop(224),
                                transforms.ToTensor(),
                                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
-alexnet = models.alexnet(pretrained=True)
-alexnet = nn.Sequential(*list(alexnet.children())[:-1])
-alexnet = alexnet
-alexnet.to(device)
+vgg = models.vgg19_bn(pretrained=True)
+vgg = nn.Sequential(*list(vgg.children())[:-2][0][:-1])
+vgg = vgg
+vgg.to(device)
 
 general_path = "/home/s1885778/nrl/dataset/Images_/Images_"
 
@@ -141,7 +140,7 @@ for item in arr:
         print("Put images on device: " + str(device))
         input = sample_batched['image'].to(device)
         print("Put them through the pretrained network...")
-        batch_features = alexnet.forward(input)
+        batch_features = vgg.forward(input)
         # Reshape output from the last layer of the resnet
         print("Return data on CPU")
         batch_features = batch_features.cpu()
@@ -159,7 +158,7 @@ for item in arr:
                 print(id)
 
     # Saving the data
-    save_file_path = "/home/s1885778/nrl/dataset/alexnet/image_features_" + str(item) + ".hdf5"
+    save_file_path = "/home/s1885778/nrl/dataset/vgg/image_features_" + str(item) + ".hdf5"
     print("Saving file: " + save_file_path + " ...")
     data_file = h5py.File(save_file_path, 'w')
     data_file.create_dataset("image_id", data=ids)
