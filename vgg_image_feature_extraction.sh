@@ -33,4 +33,4 @@ export DATASET_DIR=${TMP}/datasets/
 # Activate the relevant virtual environment:
 source /home/${STUDENT_ID}/miniconda3/bin/activate mlp
 
-python alexnet_image_feature_extraction.py --batch_size 10 --use_gpu 'True' --gpu_id '0' --seed 0
+python vgg_image_feature_extraction.py --batch_size 10 --use_gpu 'True' --gpu_id '0' --seed 0
