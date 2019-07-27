@@ -115,11 +115,10 @@ class ExperimentBuilder(nn.Module):
                 device=self.device)  # send data to device as torch tensors
 
         # x = x.to(self.device)
-        y = y.type(torch.float).to(self.device)
+        y = y.to(self.device)
 
         out = self.model.forward(x)  # forward the data in the model
         out = out.type(torch.float)
-        y = y.type(torch.float)
         loss = self.criterion(input=out, target=y)  # compute loss
 
         self.optimizer.zero_grad()  # set all weight grads from previous training iters to 0
@@ -148,7 +147,7 @@ class ExperimentBuilder(nn.Module):
                 device=self.device)  # convert data to pytorch tensors and send to the computation device
 
         # x = x.to(self.device)
-        y = y.type(torch.float).to(self.device)
+        y = y.to(self.device)
 
         out = self.model(x)  # forward the data in the model
         out = out.type(torch.float)
@@ -202,8 +201,8 @@ class ExperimentBuilder(nn.Module):
                 for idx, batch in enumerate(self.train_data):  # get data batches
                     desc_1_batch = batch['desc1'].to(self.device)
                     desc_2_batch = batch['desc2'].to(self.device)
-                    img_1_batch = batch['image_1'].to(self.device).type(torch.float)
-                    img_2_batch = batch['image_2'].to(self.device).type(torch.float)
+                    img_1_batch = batch['image_1'].to(self.device)
+                    img_2_batch = batch['image_2'].to(self.device)
                     y = batch['target']
                     x = [desc_1_batch, img_1_batch, desc_2_batch, img_2_batch]
                     loss, aps = self.run_train_iter(x=x, y=y)  # take a training iter step
@@ -216,8 +215,8 @@ class ExperimentBuilder(nn.Module):
                 for idx, batch in enumerate(self.val_data):  # get data batches
                     desc_1_batch = batch['desc1'].to(self.device)
                     desc_2_batch = batch['desc2'].to(self.device)
-                    img_1_batch = batch['image_1'].to(self.device).type(torch.float)
-                    img_2_batch = batch['image_2'].to(self.device).type(torch.float)
+                    img_1_batch = batch['image_1'].to(self.device)
+                    img_2_batch = batch['image_2'].to(self.device)
                     y = batch['target']
                     x = [desc_1_batch, img_1_batch, desc_2_batch, img_2_batch]
                     loss, aps = self.run_evaluation_iter(x=x, y=y)  # run a validation iter
@@ -241,7 +240,7 @@ class ExperimentBuilder(nn.Module):
             save_statistics(experiment_log_dir=self.experiment_logs, filename='summary.csv',
                             stats_dict=total_losses, current_epoch=i,
                             continue_from_mode=True if (
-                                        self.starting_epoch != 0 or i > 0) else False)  # save statistics to stats file.
+                                    self.starting_epoch != 0 or i > 0) else False)  # save statistics to stats file.
 
             train_batch_losses = {"train_aps": [], "train_loss": []}
             val_batch_losses = {"val_aps": [], "val_loss": []}
@@ -251,7 +250,6 @@ class ExperimentBuilder(nn.Module):
 
             val_batch_losses["val_loss"] = current_epoch_losses["val_loss"]
             val_batch_losses["val_aps"] = current_epoch_losses["val_aps"]
-
 
             save_statistics(experiment_log_dir=self.experiment_logs, filename='train_summary.csv',
                             stats_dict=train_batch_losses, current_epoch=i, save_full_dict=True,
@@ -291,8 +289,8 @@ class ExperimentBuilder(nn.Module):
             for idx, batch in enumerate(self.test_data):  # sample batch
                 desc_1_batch = batch['desc1'].to(self.device)
                 desc_2_batch = batch['desc2'].to(self.device)
-                img_1_batch = batch['image_1'].to(self.device).type(torch.float)
-                img_2_batch = batch['image_2'].to(self.device).type(torch.float)
+                img_1_batch = batch['image_1'].to(self.device)
+                img_2_batch = batch['image_2'].to(self.device)
                 y = batch['target']
                 x = [desc_1_batch, img_1_batch, desc_2_batch, img_2_batch]
                 loss, aps = self.run_evaluation_iter(x=x,
