@@ -26,17 +26,20 @@ elif args.dataset_name == 'san':
 training_data = DatasetProvider(pair_file_path='dataset/ItemPairs_train_processed.csv',
                                 data_file_path='/disk/scratch/s1885778/dataset/fasttext_data.hdf5',
                                 images_dir=image_dir)
-training_data = DataLoader(training_data, batch_size=args.batch_size, shuffle=True, num_workers=2)
+training_data_loader = DataLoader(training_data, batch_size=args.batch_size, shuffle=True, num_workers=2,
+                                  collate_fn=training_data.collater)
 print('Training set loaded.')
 valid_data = DatasetProvider(pair_file_path='dataset/ItemPairs_val_processed.csv',
                              data_file_path='/disk/scratch/s1885778/dataset/fasttext_data.hdf5',
                              images_dir=image_dir)
-valid_data = DataLoader(valid_data, batch_size=args.batch_size, shuffle=True, num_workers=2)
+valid_data_loader = DataLoader(valid_data, batch_size=args.batch_size, shuffle=True, num_workers=2,
+                               collate_fn=valid_data.collater)
 print('Validation set loaded.')
 test_data = DatasetProvider(pair_file_path='dataset/ItemPairs_test_processed.csv',
                             data_file_path='/disk/scratch/s1885778/dataset/fasttext_data.hdf5',
                             images_dir=image_dir)
-test_data = DataLoader(test_data, batch_size=args.batch_size, shuffle=True, num_workers=2)
+test_data_loader = DataLoader(test_data, batch_size=args.batch_size, shuffle=True, num_workers=2,
+                              collate_fn=test_data.collater)
 print('Test set loaded.')
 
 # Binary classification
@@ -48,7 +51,7 @@ if args.model_name == 'standard':
                           num_output_classes=num_output_classes,
                           use_bias=True,
                           hidden_size=args.lstm_hidden_dim,
-                          num_lstms=args.num_layers,
+                          num_recurrent_layers=args.num_layers,
                           encoder_output_size=args.encoder_output_size,
                           embedding_matrix=embedding_matrix)
 
@@ -57,30 +60,30 @@ if args.model_name == 'standard':
                           num_output_classes=num_output_classes,
                           use_bias=True,
                           hidden_size=args.lstm_hidden_dim,
-                          num_lstms=args.num_layers,
+                          num_recurrent_layers=args.num_layers,
                           encoder_output_size=args.encoder_output_size,
                           embedding_matrix=embedding_matrix)
 elif args.model_name == 'san':
     model_1 = StackedAttentionNetwork(desc_input_shape=(args.batch_size, 102),
-                            img_input_shape=(args.batch_size, 256, 13, 13),
-                            num_output_classes=num_output_classes,
-                            hidden_size=100,
-                            attention_kernel_size=50,
-                            use_bias=True,
-                            num_att_layers=2,
-                            embedding_matrix=embedding_matrix)
+                                      img_input_shape=(args.batch_size, 256, 13, 13),
+                                      num_output_classes=num_output_classes,
+                                      hidden_size=100,
+                                      attention_kernel_size=50,
+                                      use_bias=True,
+                                      num_att_layers=2,
+                                      embedding_matrix=embedding_matrix)
 
     model_2 = StackedAttentionNetwork(desc_input_shape=(64, 102),
-                            img_input_shape=(64, 256, 13, 13),
-                            num_output_classes=2,
-                            hidden_size=args.lstm_hidden_dim,
-                            attention_kernel_size=args.encoder_output_size,
-                            use_bias=True,
-                            num_att_layers=2,
-                            embedding_matrix=embedding_matrix)
+                                      img_input_shape=(64, 256, 13, 13),
+                                      num_output_classes=2,
+                                      hidden_size=args.lstm_hidden_dim,
+                                      attention_kernel_size=args.encoder_output_size,
+                                      use_bias=True,
+                                      num_att_layers=2,
+                                      embedding_matrix=embedding_matrix)
 
 siamese_model = SiameseNetwork(item_1_model=model_1, item_2_model=model_2, encoder_output_size=args.encoder_output_size,
-                               fc1_size=args.fc1_size, fc2_size=args.fc2_size, use_bias = True)
+                               fc1_size=args.fc1_size, fc2_size=args.fc2_size, use_bias=True)
 
 experiment = ExperimentBuilder(network_model=siamese_model,
                                experiment_name=args.experiment_name,
@@ -89,7 +92,7 @@ experiment = ExperimentBuilder(network_model=siamese_model,
                                weight_decay_coefficient=args.weight_decay_coefficient,
                                continue_from_epoch=args.continue_from_epoch,
                                device=device,
-                               train_data=training_data,
-                               val_data=valid_data,
-                               test_data=test_data)  # build an experiment object
+                               train_data=training_data_loader,
+                               val_data=valid_data_loader,
+                               test_data=test_data_loader)  # build an experiment object
 experiment_metrics, test_metrics = experiment.run_experiment()  # run experiment and return experiment metrics
