@@ -5,8 +5,8 @@ from torch.nn import functional as F
 
 
 class VQAStandard(nn.Module):
-    def __init__(self, desc_input_shape, img_input_shape, num_output_classes, use_bias, hidden_size, num_lstms,
-                 encoder_output_size, embedding_matrix):
+    def __init__(self, desc_input_shape, img_input_shape, num_output_classes, use_bias, hidden_size,
+                 num_recurrent_layers, encoder_output_size, embedding_matrix):
         super(VQAStandard, self).__init__()
         self.desc_input_shape = desc_input_shape
         self.img_input_shape = img_input_shape
@@ -14,7 +14,7 @@ class VQAStandard(nn.Module):
         self.use_bias = use_bias
         self.hidden_size = hidden_size
         self.out_features = encoder_output_size
-        self.num_lstms = num_lstms
+        self.num_recurrent_layers = num_recurrent_layers
         self.layer_dict = nn.ModuleDict()
         self.embedding_layer = self.create_embedding_layer(embedding_matrix)
         self.build_model()
@@ -29,28 +29,41 @@ class VQAStandard(nn.Module):
 
         # Define Layers
         out_desc = self.embedding_layer(out_desc)
-        self.layer_dict['lstm'] = nn.LSTM(input_size=out_desc.shape[-1], hidden_size=self.hidden_size,
-                                          num_layers=self.num_lstms)
+        self.layer_dict['gru'] = nn.GRU(input_size=out_desc.shape[-1], hidden_size=self.hidden_size,
+                                        num_layers=self.num_recurrent_layers, batch_first=True)
 
-        self.layer_dict['desc_fc'] = nn.Linear(in_features=2 * self.num_lstms * self.hidden_size,
+        self.layer_dict['desc_fc'] = nn.Linear(in_features=self.num_recurrent_layers * self.hidden_size,
                                                out_features=self.out_features,
                                                bias=self.use_bias)
         self.layer_dict['img_fc'] = nn.Linear(in_features=self.img_input_shape[1], out_features=self.out_features,
                                               bias=self.use_bias)
 
     def forward(self, input):
+        # Split input to descriptions and image embeddings
         desc = input[0]
         img_embed = input[1]
 
-        batch_size = desc.shape[0]
-        out_desc = self.embedding_layer(desc)
-        # Transform input from (batch_size, seq_length, embedding_size) to (seq_length, batch_size, embedding_size)
-        out_desc = out_desc.reshape(out_desc.shape[1], out_desc.shape[0], out_desc.shape[2]).type(torch.float)
-        out, (h, c) = self.layer_dict['lstm'](out_desc)
-        out_desc = torch.cat((h, c), dim=2)
-        out_desc = out_desc.reshape((out_desc.shape[1], out_desc.shape[0] * out_desc.shape[2]))
+        # Create a tensor, that contains the length of every description in the batch, without the padding <NULL> token
+        description_lengths = (1 - (desc == 0)).sum(dim=1).flatten()
+        # Transform the batch of description by running them through a pre-trained FastText embedding layer
+        out_desc = self.embedding_layer(desc).type(torch.float)
+        # Convert the batch to a packed padded sequence Object
+        packed_out_desc = nn.utils.rnn.pack_padded_sequence(input=out_desc, lengths=description_lengths,
+                                                            batch_first=True, enforce_sorted=False)
+        # Pass the packed batch through the LSTM
+        out, _ = self.layer_dict['gru'](packed_out_desc)
+        # Unpacked the hidden states for each element in the batch and the lenght of each element
+        unpacked, upacked_len = nn.utils.rnn.pad_packed_sequence(out, batch_first=True)
+        # Combine the last hidden state for each description in the batch in one tensor
+        out_desc = torch.index_select(input=unpacked, dim=1, index=(upacked_len - 1))[0]
+        # Legacy, but keep it here
+        # out_desc = torch.cat((h, c), dim=2)
+        # out_desc = out_desc.reshape((out_desc.shape[1], out_desc.shape[0] * out_desc.shape[2]))
+
+        # Apply FC layers to transform both the image embedding and the description embedding to the same size
         out_desc = self.layer_dict['desc_fc'](out_desc)
         out_img = self.layer_dict['img_fc'](img_embed)
+        out_img = torch.tanh(out_img)
         # Point-wise multiplication
         out = out_desc * out_img
 
