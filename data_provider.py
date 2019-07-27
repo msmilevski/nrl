@@ -7,6 +7,7 @@ import warnings
 import ast
 import pickle
 import preprocessing.preprocessing_util as util
+import torch
 
 warnings.filterwarnings("ignore")
 
@@ -14,7 +15,7 @@ warnings.filterwarnings("ignore")
 class DatasetProvider(Dataset):
 
     def __init__(self, pair_file_path, data_file_path, images_dir, transform=None, start_id=-1,
-                 id_do_data_map='dataset/id_to_desc_map.pickle', id_to_img_map='dataset/img_id_mp.pickle'):
+                 id_do_data_map='dataset/id_to_desc_map.pickle', id_to_img_map='dataset/img_id_map.pickle'):
         '''
         Class that creates the dataset online, using the ids from the pairs dataset
         :param pair_file_path: path to the Pairs dataset
@@ -39,7 +40,6 @@ class DatasetProvider(Dataset):
         # self.item_idx = data['itemID'][()]
         self.image_ids = data['image_id'][()]
         self.descriptions = data['descriptions'][()]
-
 
     def get_image_embedding(self, image_id):
         folder_id = image_id % 100
@@ -76,3 +76,31 @@ class DatasetProvider(Dataset):
         img_2 = self.get_image_embedding(int(item_2_img))
 
         return {'desc1': item_1_desc, 'image_1': img_1, 'desc2': item_2_desc, 'image_2': img_2, 'target': y}
+
+    def collater(self, samples):
+        if len(samples) == 0:
+            return {}
+
+        def merge(values):
+            max_length = max(v.size(0) for v in values)
+            result = values[0].new(len(values), max_length).fill_(0)
+            for i, v in enumerate(values):
+                result[i, :len(v)].copy_(v)
+
+            return result
+
+        images_1 = torch.FloatTensor([s['image_1'] for s in samples])
+        images_2 = torch.FloatTensor([s['image_2'] for s in samples])
+        # desc_1 = merge([s['desc1'] for s in samples])
+        # desc_2 = merge([s['desc2'] for s in samples])
+        desc_1 = torch.LongTensor([s['desc1'] for s in samples])
+        desc_2 = torch.LongTensor([s['desc2'] for s in samples])
+        target = torch.FloatTensor([s['target'] for s in samples])
+
+        return {
+            'desc1': desc_1,
+            'image_1': images_1,
+            'desc2': desc_2,
+            'image_2': images_2,
+            'target': target
+        }
