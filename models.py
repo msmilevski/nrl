@@ -44,6 +44,8 @@ class VQAStandard(nn.Module):
         img_embed = input[1]
 
         # Create a tensor, that contains the length of every description in the batch, without the padding <NULL> token
+        # This is need so when we call nn.utils.rnn.pack_padded_sequence, the function know which outputs will be equal
+        # to a zero vector in the final output for each description
         description_lengths = (1 - (desc == 0)).sum(dim=1).flatten()
         # Transform the batch of description by running them through a pre-trained FastText embedding layer
         out_desc = self.embedding_layer(desc).type(torch.float)
@@ -53,8 +55,12 @@ class VQAStandard(nn.Module):
         # Pass the packed batch through the LSTM
         out, _ = self.layer_dict['gru'](packed_out_desc)
         # Unpacked the hidden states for each element in the batch and the lenght of each element
+        # In the unpacked variable, we have a sequence of hidden states where after the lenght of the description
+        # all other hidden states are equal to a zero vector
+        # Example: tensor([1., 2. 3.], [4., 5.4, 5.3], [0, 0, 0], [0, 0, 0]) for max_timesteps = 4 and hidden_size = 3
         unpacked, upacked_len = nn.utils.rnn.pad_packed_sequence(out, batch_first=True)
         # Combine the last hidden state for each description in the batch in one tensor
+        # Take the last non-zero hidden_state from the output for each element in the batch
         out_desc = torch.index_select(input=unpacked, dim=1, index=(upacked_len - 1))[0]
         # Legacy, but keep it here
         # out_desc = torch.cat((h, c), dim=2)
