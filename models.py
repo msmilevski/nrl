@@ -59,9 +59,10 @@ class VQAStandard(nn.Module):
         # all other hidden states are equal to a zero vector
         # Example: tensor([1., 2. 3.], [4., 5.4, 5.3], [0, 0, 0], [0, 0, 0]) for max_timesteps = 4 and hidden_size = 3
         unpacked, upacked_len = nn.utils.rnn.pad_packed_sequence(out, batch_first=True)
+        upacked_len = (upacked_len - 1).cuda()
         # Combine the last hidden state for each description in the batch in one tensor
         # Take the last non-zero hidden_state from the output for each element in the batch
-        out_desc = torch.index_select(input=unpacked, dim=1, index=(upacked_len - 1))[0]
+        out_desc = torch.index_select(input=unpacked, dim=1, index=upacked_len)[0]
         # Legacy, but keep it here
         # out_desc = torch.cat((h, c), dim=2)
         # out_desc = out_desc.reshape((out_desc.shape[1], out_desc.shape[0] * out_desc.shape[2]))
