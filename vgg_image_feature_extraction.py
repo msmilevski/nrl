@@ -106,8 +106,10 @@ args, device = arg_extractor.get_args()
 print(args)
 
 dict = pickle.load(open('dataset/Image_embed_dict.pickle', 'rb'))
-arr = dict.keys()
-arr = arr[args.seed * 2: (args.seed + 1) * 2]
+arr = [1, 2, 3, 4, 6, 7, 8, 9, 11, 12, 13, 16, 17, 18, 19, 20, 22, 23, 25, 28, 30, 32, 33, 35, 37, 38, 40, 41, 43, 45,
+       46, 47, 49, 50, 51, 53, 54, 55, 57, 58, 60, 61, 62, 63, 65, 66, 68, 69, 70, 72, 73, 74, 75, 76, 77, 79, 80, 81,
+       82, 83, 85, 86, 88, 89, 90, 91, 93, 94, 95, 96, 97, 98, 99]
+arr = arr[args.seed * 5: (args.seed + 1) * 5]
 
 composed = transforms.Compose([Rescale(256),
                                RandomCrop(224),
