@@ -8,10 +8,10 @@
   "experiment_name": "standard_experiment",
   "use_gpu": "False",
   "num_layers": 1,
-  "lstm_hidden_dim": 512,
-  "encoder_output_size": 1024,
-  "fc1_size": 512,
-  "fc2_size": 1024,
-  "lr": 0.001,
+  "lstm_hidden_dim": 300,
+  "encoder_output_size": 100,
+  "fc1_size": 100,
+  "fc2_size": 50,
+  "lr": 0.0001,
   "weight_decay_coefficient": 1e-05
 }

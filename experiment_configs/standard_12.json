@@ -1,0 +1,19 @@
+{
+  "batch_size": 64,
+  "model_name": "standard",
+  "dataset_name": "standard",
+  "continue_from_epoch": -2,
+  "seed": 10,
+  "num_epochs": 100,
+  "experiment_name": "standard_12_experiment",
+  "use_gpu": "True",
+  "gpu_id":"0",
+  "num_layers": 1,
+  "lstm_hidden_dim": 256,
+  "encoder_output_size": 256,
+  "fc1_size": 128,
+  "fc2_size": 64,
+  "lr": 0.0001,
+  "dropout_rate": 0.3,
+  "weight_decay_coefficient": 1e-05
+}
