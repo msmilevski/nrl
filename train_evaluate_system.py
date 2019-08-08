@@ -67,8 +67,8 @@ elif args.model_name == 'san':
     model_1 = StackedAttentionNetwork(desc_input_shape=(args.batch_size, 102),
                                       img_input_shape=(args.batch_size, 512, 14, 14),
                                       num_output_classes=num_output_classes,
-                                      hidden_size=100,
-                                      attention_kernel_size=50,
+                                      hidden_size=args.lstm_hidden_dim,
+                                      attention_kernel_size=args.encoder_output_size,
                                       use_bias=True,
                                       num_att_layers=2,
                                       embedding_matrix=embedding_matrix)
