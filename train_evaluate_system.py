@@ -65,7 +65,7 @@ if args.model_name == 'standard':
                           embedding_matrix=embedding_matrix)
 elif args.model_name == 'san':
     model_1 = StackedAttentionNetwork(desc_input_shape=(args.batch_size, 102),
-                                      img_input_shape=(args.batch_size, 256, 13, 13),
+                                      img_input_shape=(args.batch_size, 512, 14, 14),
                                       num_output_classes=num_output_classes,
                                       hidden_size=100,
                                       attention_kernel_size=50,
@@ -73,8 +73,8 @@ elif args.model_name == 'san':
                                       num_att_layers=2,
                                       embedding_matrix=embedding_matrix)
 
-    model_2 = StackedAttentionNetwork(desc_input_shape=(64, 102),
-                                      img_input_shape=(64, 256, 13, 13),
+    model_2 = StackedAttentionNetwork(desc_input_shape=(args.batch_size, 102),
+                                      img_input_shape=(args.batch_size, 512, 14, 14),
                                       num_output_classes=2,
                                       hidden_size=args.lstm_hidden_dim,
                                       attention_kernel_size=args.encoder_output_size,
