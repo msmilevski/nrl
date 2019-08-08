@@ -21,7 +21,7 @@ seed = np.random.RandomState(seed=args.seed)
 if args.dataset_name == 'standard':
     image_dir = '/disk/scratch/s1885778/dataset/resnet152_1'
 elif args.dataset_name == 'san':
-    image_dir = '/disk/scratch/s1885778/dataset/alexnet'
+    image_dir = '/disk/scratch/s1885778/dataset/vgg'
 
 training_data = DatasetProvider(pair_file_path='dataset/ItemPairs_train_processed.csv',
                                 data_file_path='/disk/scratch/s1885778/dataset/fasttext_data.hdf5',
