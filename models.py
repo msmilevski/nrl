@@ -258,17 +258,3 @@ class SiameseNetwork(nn.Module):
         self.item_2_model.reset_parameters()
         for item in self.layer_dict.children():
             item.reset_parameters()
-
-
-embedding_matrix = np.load('dataset/fasttext_embed_10000.npy')
-model_1 = StackedAttentionNetwork(desc_input_shape=(64, 102),
-                                  img_input_shape=(64, 512, 14, 14),
-                                  num_output_classes=2,
-                                  hidden_size=100,
-                                  attention_kernel_size=50,
-                                  use_bias=True,
-                                  num_att_layers=2,
-                                  embedding_matrix=embedding_matrix)
-
-data = [torch.randint(0, 1000, size=(64, 102)).type(torch.long), torch.zeros(64, 512, 14, 14)]
-model_1(input=data)
