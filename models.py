@@ -29,12 +29,14 @@ class VQAStandard(nn.Module):
 
         # Define Layers
         out_desc = self.embedding_layer(out_desc)
+        # GRU for modelling the description
         self.layer_dict['gru'] = nn.GRU(input_size=out_desc.shape[-1], hidden_size=self.hidden_size,
                                         num_layers=self.num_recurrent_layers, batch_first=True)
-
+        # Fully connected layer for transformation of the description encoding
         self.layer_dict['desc_fc'] = nn.Linear(in_features=self.num_recurrent_layers * self.hidden_size,
                                                out_features=self.out_features,
                                                bias=self.use_bias)
+        # Fully connected layer for transformation of the image features vector
         self.layer_dict['img_fc'] = nn.Linear(in_features=self.img_input_shape[1], out_features=self.out_features,
                                               bias=self.use_bias)
 
@@ -103,12 +105,14 @@ class StackedAttentionNetwork(nn.Module):
     def build_model(self):
         out_desc = torch.zeros(self.desc_input_shape, dtype=torch.long)
 
-        out_desc = self.embedding_layer(out_desc)
-        out_desc = out_desc.reshape(out_desc.shape[1], out_desc.shape[0], out_desc.shape[2]).type(torch.float)
-        self.layer_dict['lstm'] = nn.LSTM(input_size=out_desc.shape[-1], hidden_size=self.hidden_size)
-        h, c = self.layer_dict['lstm'](out_desc)
+        out_desc = self.embedding_layer(out_desc).type(torch.float)
 
-        out_desc = h[-1]
+        self.layer_dict['gru'] = nn.GRU(input_size=out_desc.shape[-1], hidden_size=self.hidden_size, batch_first=True)
+        out, h = self.layer_dict['gru'](out_desc)
+
+        out_desc = h.squeeze()
+
+        print(out_desc.shape)
 
         out_img = torch.zeros(self.img_input_shape)
         self.num_areas = out_img.shape[2] * out_img.shape[3]
@@ -127,6 +131,8 @@ class StackedAttentionNetwork(nn.Module):
                                                                            out_features=self.attention_kernel_size,
                                                                            bias=True)
             temp_u = self.layer_dict['fc_transform_query_{}'.format(i)](u_k)
+            print(temp_u.shape)
+            print(temp_out_img.shape)
             temp_u = temp_u.unsqueeze(1)
             h_a = temp_out_img + temp_u
             h_a = torch.tanh(h_a)
@@ -146,13 +152,29 @@ class StackedAttentionNetwork(nn.Module):
         out_desc = input[0]
         out_img = input[1]
         self.num_areas = out_img.shape[2] * out_img.shape[3]
-
-        out_desc = self.embedding_layer(out_desc)
-        out_desc = out_desc.reshape(out_desc.shape[1], out_desc.shape[0], out_desc.shape[2]).type(torch.float)
-        h, c = self.layer_dict['lstm'](out_desc)
-        out_desc = h[-1]
-
+        # Create a tensor, that contains the length of every description in the batch, without the padding <NULL> token
+        # This is need so when we call nn.utils.rnn.pack_padded_sequence, the function know which outputs will be equal
+        # to a zero vector in the final output for each description
+        description_lengths = (1 - (out_desc == 0)).sum(dim=1).flatten()
+        # Transform the batch of description by running them through a pre-trained FastText embedding layer
+        out_desc = self.embedding_layer(out_desc).type(torch.float)
+        # Convert the batch to a packed padded sequence Object
+        packed_out_desc = nn.utils.rnn.pack_padded_sequence(input=out_desc, lengths=description_lengths,
+                                                            batch_first=True, enforce_sorted=False)
+        # Pass the packed batch through the LSTM
+        out, _ = self.layer_dict['gru'](packed_out_desc)
+        # Unpacked the hidden states for each element in the batch and the lenght of each element
+        # In the unpacked variable, we have a sequence of hidden states where after the lenght of the description
+        # all other hidden states are equal to a zero vector
+        # Example: tensor([1., 2. 3.], [4., 5.4, 5.3], [0, 0, 0], [0, 0, 0]) for max_timesteps = 4 and hidden_size = 3
+        unpacked, upacked_len = nn.utils.rnn.pad_packed_sequence(out, batch_first=True)
+        upacked_len = (upacked_len - 1).cuda()
+        # Combine the last hidden state for each description in the batch in one tensor
+        # Take the last non-zero hidden_state from the output for each element in the batch
+        out_desc = torch.index_select(input=unpacked, dim=1, index=upacked_len)[0]
+        # Reshape image features from (batch_size, 512, 14, 14) to (batch_size, 14*14, 512)
         out_img = out_img.reshape(out_img.shape[0], self.num_areas, out_img.shape[1])
+        # Transform each region feature vector to have the same size as the description embedding
         out_img = self.layer_dict['fc_transform_img'](out_img)
 
         u_k = out_desc
@@ -160,15 +182,19 @@ class StackedAttentionNetwork(nn.Module):
             temp_out_img = self.layer_dict['fc_transform_img_{}'.format(i)](out_img)
             temp_u = self.layer_dict['fc_transform_query_{}'.format(i)](u_k)
             temp_u = temp_u.unsqueeze(1)
+            # Combine the query and the visual features
             h_a = temp_out_img + temp_u
             h_a = torch.tanh(h_a)
+            # Create a distribution over the joint representation of the query and the visual features
             p_i = self.layer_dict['fc_prob_{}'.format(i)](h_a)
-            p_i = p_i
             p_i = F.softmax(p_i, dim=1)
 
             temp_out_img = out_img.reshape(out_img.shape[0], out_img.shape[2], out_img.shape[1])
+            # Weighted sum between the region features and the attention distribution
             v_lambda = torch.bmm(temp_out_img, p_i)
             v_lambda = v_lambda.squeeze()
+            # Create a better joint representation of the query and the image features by combining
+            # the weighted sum with the previous query
             u_k = v_lambda + u_k
 
         return u_k
@@ -232,3 +258,17 @@ class SiameseNetwork(nn.Module):
         self.item_2_model.reset_parameters()
         for item in self.layer_dict.children():
             item.reset_parameters()
+
+
+embedding_matrix = np.load('dataset/fasttext_embed_10000.npy')
+model_1 = StackedAttentionNetwork(desc_input_shape=(64, 102),
+                                  img_input_shape=(64, 512, 14, 14),
+                                  num_output_classes=2,
+                                  hidden_size=100,
+                                  attention_kernel_size=50,
+                                  use_bias=True,
+                                  num_att_layers=2,
+                                  embedding_matrix=embedding_matrix)
+
+data = [torch.randint(0, 1000, size=(64, 102)).type(torch.long), torch.zeros(64, 512, 14, 14)]
+model_1(input=data)
