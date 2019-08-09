@@ -53,7 +53,8 @@ if args.model_name == 'standard':
                           hidden_size=args.lstm_hidden_dim,
                           num_recurrent_layers=args.num_layers,
                           encoder_output_size=args.encoder_output_size,
-                          embedding_matrix=embedding_matrix)
+                          embedding_matrix=embedding_matrix,
+                          dropout_rate=args.dropout_rate)
 
     model_2 = VQAStandard(desc_input_shape=(args.batch_size, 102),
                           img_input_shape=(args.batch_size, 2048),
@@ -62,7 +63,8 @@ if args.model_name == 'standard':
                           hidden_size=args.lstm_hidden_dim,
                           num_recurrent_layers=args.num_layers,
                           encoder_output_size=args.encoder_output_size,
-                          embedding_matrix=embedding_matrix)
+                          embedding_matrix=embedding_matrix,
+                          dropout_rate=args.dropout_rate)
 elif args.model_name == 'san':
     model_1 = StackedAttentionNetwork(desc_input_shape=(args.batch_size, 102),
                                       img_input_shape=(args.batch_size, 512, 14, 14),
