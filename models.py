@@ -6,7 +6,7 @@ from torch.nn import functional as F
 
 class VQAStandard(nn.Module):
     def __init__(self, desc_input_shape, img_input_shape, num_output_classes, use_bias, hidden_size,
-                 num_recurrent_layers, encoder_output_size, embedding_matrix):
+                 num_recurrent_layers, encoder_output_size, embedding_matrix, dropout_rate):
         super(VQAStandard, self).__init__()
         self.desc_input_shape = desc_input_shape
         self.img_input_shape = img_input_shape
@@ -18,6 +18,7 @@ class VQAStandard(nn.Module):
         self.layer_dict = nn.ModuleDict()
         self.embedding_layer = self.create_embedding_layer(embedding_matrix)
         self.build_model()
+        self.dropout_layer = nn.Dropout(p=dropout_rate)
 
     def create_embedding_layer(self, embedding_matrix):
         embedding_matrix = torch.from_numpy(embedding_matrix)
@@ -75,6 +76,7 @@ class VQAStandard(nn.Module):
         out_img = torch.tanh(out_img)
         # Point-wise multiplication
         out = out_desc * out_img
+        out = self.dropout_layer(out)
 
         return out
 

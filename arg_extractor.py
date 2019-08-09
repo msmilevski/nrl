@@ -39,6 +39,7 @@ def get_args():
     parser.add_argument('--num_layers', nargs="?", type=int, default=4,
                         help='Number of LSTM layers')
     parser.add_argument('--num_epochs', nargs="?", type=int, default=100, help='The experiment\'s epoch budget')
+    parser.add_argument('--dropout_rate', nargs="?", type=float, default=0.0, help='Dropout rate')
     parser.add_argument('--experiment_name', nargs="?", type=str, default="exp_1",
                         help='Experiment name - to be used for building the experiment folder')
     parser.add_argument('--use_gpu', nargs="?", type=str2bool, default=False,
