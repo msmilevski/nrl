@@ -8,6 +8,7 @@ import operator
 import h5py
 import numpy as np
 import io
+import pickle
 
 
 def initial_preprocess(info_path):
@@ -319,3 +320,28 @@ def save_embeddings(vocab_file_path='dataset/fasttext_vocab.json',
     embedding_matrix = load_vectors(fname=pretrained_word_embed_file, word_to_idx=word_to_idx)
     print("Embedding matrix is loaded/")
     np.save(output_file, embedding_matrix)
+
+
+def add_length_column(pairs_file_path, data_file_path, id_do_data_map):
+    pairs = pd.read_csv(pairs_file_path, encoding='utf-8')
+    data = h5py.File(data_file_path, 'r')
+    descriptions = data['descriptions'][()]
+    id_to_data = pickle.load(open(id_do_data_map, 'rb'))
+    avg_pair_length = []
+    for idx in tqdm(range(len(pairs))):
+        pair = pairs.iloc[idx]
+        item_1_id = int(pair['itemID_1'])
+        item_2_id = int(pair['itemID_2'])
+        position_item_1 = id_to_data[item_1_id]
+        position_item_2 = id_to_data[item_2_id]
+        item_1_desc = descriptions[position_item_1]
+        item_2_desc = descriptions[position_item_2]
+
+        desc_1_length = (1 - (item_1_desc == 0)).sum()
+        desc_2_length = (1 - (item_2_desc == 0)).sum()
+
+        avg_pair_length.append((desc_1_length + desc_2_length) / 2)
+
+    column = pd.DataFrame({'avg_length': avg_pair_length})
+    pairs = pd.concat([pairs, column], axis=1)
+    pairs.to_csv(pairs_file_path, encoding='utf-8')
