@@ -49,7 +49,7 @@ class VQAStandard(nn.Module):
         # Create a tensor, that contains the length of every description in the batch, without the padding <NULL> token
         # This is need so when we call nn.utils.rnn.pack_padded_sequence, the function know which outputs will be equal
         # to a zero vector in the final output for each description
-        description_lengths = (1 - (desc == 0)).sum(dim=1).flatten()
+        description_lengths = (1 - (desc == 0).type(torch.int)).sum(dim=1).flatten()
         # Transform the batch of description by running them through a pre-trained FastText embedding layer
         out_desc = self.embedding_layer(desc).type(torch.float)
         # Convert the batch to a packed padded sequence Object
@@ -153,7 +153,7 @@ class StackedAttentionNetwork(nn.Module):
         # Create a tensor, that contains the length of every description in the batch, without the padding <NULL> token
         # This is need so when we call nn.utils.rnn.pack_padded_sequence, the function know which outputs will be equal
         # to a zero vector in the final output for each description
-        description_lengths = (1 - (out_desc == 0)).sum(dim=1).flatten()
+        description_lengths = (1 - (out_desc == 0).type(torch.int)).sum(dim=1).flatten()
         # Transform the batch of description by running them through a pre-trained FastText embedding layer
         out_desc = self.embedding_layer(out_desc).type(torch.float)
         # Convert the batch to a packed padded sequence Object
