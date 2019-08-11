@@ -114,8 +114,6 @@ class StackedAttentionNetwork(nn.Module):
 
         out_desc = h.squeeze()
 
-        print(out_desc.shape)
-
         out_img = torch.zeros(self.img_input_shape)
         self.num_areas = out_img.shape[2] * out_img.shape[3]
         out_img = out_img.reshape(out_img.shape[0], self.num_areas, out_img.shape[1])
@@ -133,8 +131,6 @@ class StackedAttentionNetwork(nn.Module):
                                                                            out_features=self.attention_kernel_size,
                                                                            bias=True)
             temp_u = self.layer_dict['fc_transform_query_{}'.format(i)](u_k)
-            print(temp_u.shape)
-            print(temp_out_img.shape)
             temp_u = temp_u.unsqueeze(1)
             h_a = temp_out_img + temp_u
             h_a = torch.tanh(h_a)

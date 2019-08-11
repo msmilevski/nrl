@@ -157,7 +157,7 @@ class ExperimentBuilder(nn.Module):
         y_true = y.cpu().numpy()
         average_precision = average_precision_score(y_true=y_true, y_score=predicted)
         # accuracy = np.mean(list(predicted.eq(y.data).cpu()))  # compute accuracy
-        return loss.data.detach().cpu().numpy(), average_precision
+        return loss.data.detach().cpu().numpy(), average_precision, predicted
 
     def save_model(self, model_save_dir, model_save_name, model_idx, state):
         """
@@ -219,7 +219,7 @@ class ExperimentBuilder(nn.Module):
                     img_2_batch = batch['image_2'].to(self.device)
                     y = batch['target']
                     x = [desc_1_batch, img_1_batch, desc_2_batch, img_2_batch]
-                    loss, aps = self.run_evaluation_iter(x=x, y=y)  # run a validation iter
+                    loss, aps, _ = self.run_evaluation_iter(x=x, y=y)  # run a validation iter
                     current_epoch_losses["val_loss"].append(loss)  # add current iter loss to val loss list.
                     current_epoch_losses["val_aps"].append(aps)  # add current iter acc to val acc lst.
                     pbar_val.update(1)  # add 1 step to the progress bar
@@ -293,7 +293,7 @@ class ExperimentBuilder(nn.Module):
                 img_2_batch = batch['image_2'].to(self.device)
                 y = batch['target']
                 x = [desc_1_batch, img_1_batch, desc_2_batch, img_2_batch]
-                loss, aps = self.run_evaluation_iter(x=x,
+                loss, aps, predicted = self.run_evaluation_iter(x=x,
                                                      y=y)  # compute loss and accuracy by running an evaluation step
                 current_epoch_losses["test_loss"].append(loss)  # save test loss
                 current_epoch_losses["test_aps"].append(aps)  # save test accuracy
@@ -309,3 +309,39 @@ class ExperimentBuilder(nn.Module):
                         stats_dict=test_losses, current_epoch=0, continue_from_mode=False)
 
         return total_losses, test_losses
+
+    def evaluate(self):
+        print("Generating test set evaluation metrics")
+        self.load_model(model_save_dir=self.experiment_saved_models, model_idx=self.best_val_model_idx,
+                        # load best validation model
+                        model_save_name="train_model")
+        current_epoch_losses = {"test_aps": [], "test_loss": []}  # initialize a statistics dict
+        predictions = {"y_pred": []}
+        with tqdm.tqdm(total=len(self.test_data)) as pbar_test:  # ini a progress bar
+            for idx, batch in enumerate(self.test_data):  # sample batch
+                desc_1_batch = batch['desc1'].to(self.device)
+                desc_2_batch = batch['desc2'].to(self.device)
+                img_1_batch = batch['image_1'].to(self.device)
+                img_2_batch = batch['image_2'].to(self.device)
+                y = batch['target']
+                x = [desc_1_batch, img_1_batch, desc_2_batch, img_2_batch]
+                loss, aps, predicted = self.run_evaluation_iter(x=x,
+                                                     y=y)  # compute loss and accuracy by running an evaluation step
+                current_epoch_losses["test_loss"].append(loss)  # save test loss
+                current_epoch_losses["test_aps"].append(aps)  # save test accuracy
+                predicted = predicted.flatten()
+                for p in predicted:
+                     predictions['y_pred'].append(p)
+
+                pbar_test.update(1)  # update progress bar status
+                pbar_test.set_description(
+                    "loss: {:.4f}, average precision score: {:.4f}".format(loss,
+                                                                           aps))  # update progress bar string output
+        test_losses = {key: [np.mean(value)] for key, value in
+                       current_epoch_losses.items()}  # save test set metrics in dict format
+        save_statistics(experiment_log_dir=self.experiment_logs, filename='test_summary.csv',
+                        # save test set metrics on disk in .csv format
+                        stats_dict=test_losses, current_epoch=0, continue_from_mode=False)
+        save_statistics(experiment_log_dir=self.experiment_logs, filename='test_predictions.csv',
+                        # save test set metrics on disk in .csv format
+                        save_full_dict=True, stats_dict=predictions, current_epoch=0, continue_from_mode=False)
