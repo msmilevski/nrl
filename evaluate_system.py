@@ -20,10 +20,13 @@ seed = np.random.RandomState(seed=args.seed)
 
 if args.dataset_name == 'standard':
     image_dir = '/disk/scratch/s1885778/dataset/resnet152_1'
+    data_file_path = '/disk/scratch/s1885778/dataset/fasttext_data.hdf5'
 elif args.dataset_name == 'san':
-    image_dir = '/disk/scratch/s1885778/dataset/vgg'
+    image_dir = '/disk/scratch_big/s1885778/dataset/vgg'
+    data_file_path = '/disk/scratch_big/s1885778/dataset/fasttext_data.hdf5'
+
 test_data = DatasetProvider(pair_file_path='dataset/ItemPairs_test_processed.csv',
-                            data_file_path='/disk/scratch/s1885778/dataset/fasttext_data.hdf5',
+                            data_file_path=data_file_path,
                             images_dir=image_dir)
 test_data_loader = DataLoader(test_data, batch_size=args.batch_size, shuffle=False, num_workers=2,
                               collate_fn=test_data.collater)
