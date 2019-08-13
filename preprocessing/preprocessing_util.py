@@ -347,18 +347,18 @@ def add_length_column(pairs_file_path, data_file_path, id_do_data_map):
     pairs.to_csv(pairs_file_path, encoding='utf-8')
 
 
-def remove_pairs(pairs_file_path, data_file_path, ids_to_delete):
+def remove_pairs(pairs_file_path, data_file_path, ids_to_delete, id_do_data_map='dataset/id_to_desc_map.pickle'):
     pairs = pd.read_csv(pairs_file_path, encoding='utf-8')
     data = h5py.File(data_file_path, 'r')
     image_ids = data['image_id'][()]
-    item_idx = data['itemID'][()]
+    id_to_data = pickle.load(open(id_do_data_map, 'rb'))
     delete_list = []
     for idx in tqdm(range(len(pairs))):
         pair = pairs.iloc[idx]
         item_1_id = int(pair['itemID_1'])
         item_2_id = int(pair['itemID_2'])
-        position_item_1 = np.argwhere(item_idx == item_1_id)[0][0]
-        position_item_2 = np.argwhere(item_idx == item_2_id)[0][0]
+        position_item_1 = id_to_data[item_1_id]
+        position_item_2 = id_to_data[item_2_id]
         item_1_img = int(image_ids[position_item_1]) % 100
         item_2_img = int(image_ids[position_item_2]) % 100
 
@@ -367,5 +367,5 @@ def remove_pairs(pairs_file_path, data_file_path, ids_to_delete):
 
     print(len(delete_list))
     pairs.drop(index=delete_list, inplace=True)
-    pairs.to_csv("dataset/ItemPairs_test_processed_1.csv", encoding='utf-8')
-    return
+    new_pairs_file_path = pairs_file_path.split('.')[0] + '_1.csv'
+    pairs.to_csv(new_pairs_file_path, encoding='utf-8')

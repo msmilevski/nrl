@@ -2,7 +2,7 @@ from preprocessing.preprocessing_util import add_length_column, remove_pairs
 
 # add_length_column(pairs_file_path='dataset/avito-duplicate-ads-detection/ItemPairs_test_processed.csv',
 #                   data_file_path='dataset/fasttext_data.hdf5', id_do_data_map='dataset/id_to_desc_map.pickle')
-remove_pairs(pairs_file_path='dataset/ItemPairs_test_processed.csv',
+remove_pairs(pairs_file_path='dataset/ItemPairs_train_processed.csv',
              data_file_path='dataset/fasttext_data.hdf5',
              ids_to_delete=[11, 17, 30, 55, 5, 62, 90, 91, 92, 95])
 # import plot_precision_recall_curve as pprc
