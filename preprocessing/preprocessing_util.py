@@ -345,3 +345,27 @@ def add_length_column(pairs_file_path, data_file_path, id_do_data_map):
     column = pd.DataFrame({'avg_length': avg_pair_length})
     pairs = pd.concat([pairs, column], axis=1)
     pairs.to_csv(pairs_file_path, encoding='utf-8')
+
+
+def remove_pairs(pairs_file_path, data_file_path, ids_to_delete):
+    pairs = pd.read_csv(pairs_file_path, encoding='utf-8')
+    data = h5py.File(data_file_path, 'r')
+    image_ids = data['image_id'][()]
+    item_idx = data['itemID'][()]
+    delete_list = []
+    for idx in tqdm(range(len(pairs))):
+        pair = pairs.iloc[idx]
+        item_1_id = int(pair['itemID_1'])
+        item_2_id = int(pair['itemID_2'])
+        position_item_1 = np.argwhere(item_idx == item_1_id)[0][0]
+        position_item_2 = np.argwhere(item_idx == item_2_id)[0][0]
+        item_1_img = int(image_ids[position_item_1]) % 100
+        item_2_img = int(image_ids[position_item_2]) % 100
+
+        if (item_1_img in ids_to_delete) or (item_2_img in ids_to_delete):
+            delete_list.append(idx)
+
+    print(len(delete_list))
+    pairs.drop(index=delete_list, inplace=True)
+    pairs.to_csv("dataset/ItemPairs_test_processed_1.csv", encoding='utf-8')
+    return
