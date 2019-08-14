@@ -48,7 +48,9 @@ class DatasetProvider(Dataset):
             # i ovie treba da se smenat za baseline
             # ids = img_data['image_id'][()]
             position_item = self.id_to_img[image_id]
-            return img_data['image_features'][position_item]
+            result = img_data['image_features'][position_item]
+            img_data.close()
+            return result
             # ids = img_data['img_id'][()]
             # position_item = np.argwhere(ids == image_id)[0][0]
             # return img_data['img_embed'][position_item]
