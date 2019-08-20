@@ -8,8 +8,8 @@ from sklearn.metrics import average_precision_score, confusion_matrix
 
 
 def plot_stats(y_test, y_score, average_precision, figure_name):
-    tn, fp, fn, tp = confusion_matrix(y_test, y_score).ravel()
-    print((tn, fp, fn, tp))
+    #tn, fp, fn, tp = confusion_matrix(y_test, y_score).ravel()
+    #print((tn, fp, fn, tp))
     precision, recall, _ = precision_recall_curve(y_test, y_score)
     step_kwargs = ({'step': 'post'}
                    if 'step' in signature(plt.fill_between).parameters
@@ -50,25 +50,29 @@ def plot_loss(file_name):
 
     train_aps = data['train_aps'].values
     val_aps = data['val_aps'].values
-    fig = plt.figure(figsize=(8, 8))
+
     epochs = range(0, len(train_loss))
-    plt.plot(epochs, train_loss)
-    plt.plot(epochs, val_loss)
+    plt.plot(epochs, train_loss, label='Training BCE Loss')
+    plt.plot(epochs, val_loss, label='Validaiton BCE Loss')
     plt.title(experiment)
     plt.xlabel("Epochs")
     plt.ylabel("Binary Cross Entropy Loss")
-    plt.show()
+    plt.legend()
     plt.savefig(experiment + '_bce_loss.pdf')
+    plt.show()
 
-    fig.clf()
-    fig = plt.figure(figsize=(8, 8))
-    plt.plot(epochs, train_aps)
-    plt.plot(epochs, val_aps)
+
+    plt.clf()
+
+    plt.plot(epochs, train_aps, label='Training APS')
+    plt.plot(epochs, val_aps, label='Validaiton APS')
     plt.title(experiment)
     plt.xlabel("Epochs")
     plt.ylabel("Average Precision Score")
-    plt.show()
+    plt.legend()
     plt.savefig(experiment + '_aps.pdf')
+    plt.show()
+
 
 def plot_batch_loss(file_name, epochs, type):
     experiment = file_name.split('/')[-3]
@@ -105,4 +109,3 @@ def plot_batch_loss(file_name, epochs, type):
     #plt.show()
     plt.savefig(experiment + '_aps_batch_' + type + '.pdf')
 
-plot_batch_loss(file_name='experiments/standard_4_experiment/result_outputs/train_summary.csv', epochs=12, type='train')
